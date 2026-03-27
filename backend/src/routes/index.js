@@ -1,57 +1,31 @@
-import express from 'express'
-import { register, login, getMe } from '../controllers/authController.js'
-import { createBooking, getMyBookings, getAllBookings } from '../controllers/bookingController.js'
-import { submitPayment, verifyPayment, getPendingPayments } from '../controllers/paymentController.js'
-import { getVenues, updateVenueAvailability, getPackages, createPackage, updatePackage, getRevenueReport, getSummary } from '../controllers/venueController.js'
-import { protect, authorize } from '../middleware/auth.js'
-import { upload } from '../config/cloudinary.js'
+const express = require("express");
+const router = express.Router();
+const auth = require("../middleware/auth");
 
-const router = express.Router()
+const authController = require("../controllers/authController");
+const venueController = require("../controllers/venueComtroller");
+const bookingController = require("../controllers/bookingController");
+const paymentController = require("../controllers/paymentController");
 
-// ── Auth ──────────────────────────────────────────
-router.post('/auth/register', register)
-router.post('/auth/login', login)
-router.get('/auth/me', protect, getMe)
+// Auth
+router.post("/auth/register/customer", authController.registerCustomer);
+router.post("/auth/register/provider", authController.registerProvider);
+router.post("/auth/login", authController.login);
 
-// ── Venues ────────────────────────────────────────
-router.get('/venues', protect, getVenues)
-router.put('/admin/venues/:id/availability', protect, authorize('admin'), updateVenueAvailability)
+// Venues
+router.get("/venues", venueController.getAllVenues);
+router.get("/venues/:id", venueController.getVenueById);
+router.post("/venues", auth(["admin"]), venueController.createVenue);
+router.put("/venues/:id", auth(["admin"]), venueController.updateVenue);
 
-// ── Packages ──────────────────────────────────────
-router.get('/packages', protect, getPackages)
-router.post('/admin/packages', protect, authorize('admin'), createPackage)
-router.put('/admin/packages/:id', protect, authorize('admin'), updatePackage)
+// Bookings
+router.post("/bookings", auth(["customer"]), bookingController.createBooking);
+router.get("/bookings/my", auth(["customer"]), bookingController.getMyBookings);
+router.put("/bookings/:id/status", auth(["admin"]), bookingController.updateStatus);
 
-// ── Bookings ──────────────────────────────────────
-router.post('/bookings', protect, authorize('customer'), createBooking)
-router.get('/bookings/my', protect, authorize('customer'), getMyBookings)
-router.get('/bookings', protect, authorize('admin'), getAllBookings)
+// Payments
+router.post("/payments", auth(["customer"]), paymentController.uploadPayment);
+router.put("/payments/:id/approve", auth(["admin"]), paymentController.approvePayment);
+router.get("/payments", auth(["admin"]), paymentController.getAllPayments);
 
-// ── Payments ──────────────────────────────────────
-router.post('/payments', protect, authorize('customer'), upload.single('slip'), submitPayment)
-router.get('/payments/pending', protect, authorize('admin'), getPendingPayments)
-router.patch('/payments/:id/verify', protect, authorize('admin'), verifyPayment)
-
-// ── Provider ──────────────────────────────────────
-router.get('/provider/orders', protect, authorize('provider'), async (req, res) => {
-    const Order = (await import('../models/Order.js')).default
-    const orders = await Order.find({ provider: req.user._id })
-        .populate({ path: 'booking', populate: [{ path: 'venue', select: 'name address' }, { path: 'customer', select: 'name phone' }] })
-        .sort({ eventDate: 1 })
-    res.json(orders)
-})
-router.patch('/provider/orders/:id/status', protect, authorize('provider'), async (req, res) => {
-    const Order = (await import('../models/Order.js')).default
-    const order = await Order.findOneAndUpdate(
-        { _id: req.params.id, provider: req.user._id },
-        { status: req.body.status },
-        { new: true }
-    )
-    res.json(order)
-})
-
-// ── Admin Reports ─────────────────────────────────
-router.get('/admin/reports/revenue', protect, authorize('admin'), getRevenueReport)
-router.get('/admin/reports/summary', protect, authorize('admin'), getSummary)
-
-export default router
+module.exports = router;

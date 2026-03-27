@@ -1,28 +1,27 @@
-import express from 'express'
-import cors from 'cors'
-import dotenv from 'dotenv'
-import connectDB from './config/db.js'
-import routes from './routes/index.js'
+const express = require("express");
+const dotenv = require("dotenv");
+const path = require("path");
+const cors = require("cors");
 
-dotenv.config()
-connectDB()
+// ✅ โหลด .env ก่อนทุกอย่าง
+dotenv.config({ path: path.join(__dirname, "../.env") });
 
-const app = express()
+const connectDB = require("./config/db");
+const routes = require("./routes/index");
 
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }))
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+connectDB();
 
-app.use('/api', routes)
+const app = express();
 
-// Health check
-app.get('/', (_, res) => res.json({ status: 'Wedding API running' }))
+app.use(cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+}));
 
-// Error handler
-app.use((err, req, res, next) => {
-    console.error(err.stack)
-    res.status(500).json({ message: 'Something went wrong', error: err.message })
-})
+app.use(express.json());
+app.use("/api", routes);
 
-const PORT = process.env.PORT || 5000
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () =>
+    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`)
+);

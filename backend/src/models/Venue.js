@@ -4,17 +4,12 @@ const venueSchema = new mongoose.Schema({
     name: { type: String, required: true },
     description: { type: String },
     address: { type: String, required: true },
-    province: { type: String, required: true },
-    capacity: {
-        buffet: { type: Number, required: true },  // จำนวนแขก buffet สูงสุด
-        chinese: { type: Number, required: true },  // จำนวนแขก โต๊ะจีน สูงสุด
-    },
+    province: { type: String, required: true, index: true },
+    capacityBuffet: { type: Number, required: true },
+    capacityChinese: { type: Number, required: true },
     pricePerSession: { type: Number, required: true },
     images: [{ type: String }],
-    availableDates: [{ type: Date }],
     isActive: { type: Boolean, default: true },
 }, { timestamps: true })
-
-venueSchema.index({ province: 1 })
 
 export default mongoose.model('Venue', venueSchema)

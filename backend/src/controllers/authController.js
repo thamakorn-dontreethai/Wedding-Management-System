@@ -1,49 +1,52 @@
-import jwt from 'jsonwebtoken'
-import User from '../models/User.js'
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const Customer = require("../models/customers");
+const Provider = require("../models/providers");
 
-const signToken = (id) =>
-    jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN })
+const generateToken = (id, role) =>
+    jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-// POST /api/auth/register
-export const register = async (req, res) => {
+// POST /api/auth/register/customer
+exports.registerCustomer = async (req, res) => {
     try {
-        const { name, email, password, phone, role, providerType, bankAccount, bankName, maxGuests } = req.body
-
-        const exists = await User.findOne({ email })
-        if (exists) return res.status(400).json({ message: 'อีเมลนี้ถูกใช้แล้ว' })
-
-        // ป้องกันสร้าง admin ผ่าน API
-        if (role === 'admin') return res.status(403).json({ message: 'ไม่อนุญาต' })
-
-        const user = await User.create({
-            name, email, password, phone, role: role || 'customer',
-            providerType, bankAccount, bankName, maxGuests,
-        })
-
-        res.status(201).json({ token: signToken(user._id), user })
+        const { username, password, email, phone } = req.body;
+        const hashed = await bcrypt.hash(password, 10);
+        const customer = await Customer.create({ username, password: hashed, email, phone });
+        res.status(201).json({ token: generateToken(customer._id, "customer"), customer });
     } catch (err) {
-        res.status(500).json({ message: err.message })
+        res.status(400).json({ message: err.message });
     }
-}
+};
+
+// POST /api/auth/register/provider
+exports.registerProvider = async (req, res) => {
+    try {
+        const { name, type, email, password, phone, bankAccount, maxGuests } = req.body;
+        const hashed = await bcrypt.hash(password, 10);
+        const provider = await Provider.create({ name, type, email, password: hashed, phone, bankAccount, maxGuests });
+        res.status(201).json({ token: generateToken(provider._id, "provider"), provider });
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};
 
 // POST /api/auth/login
-export const login = async (req, res) => {
+exports.login = async (req, res) => {
     try {
-        const { email, password } = req.body
-        if (!email || !password) return res.status(400).json({ message: 'กรุณากรอก email และ password' })
+        const { email, password, role } = req.body;
+        let user;
 
-        const user = await User.findOne({ email }).select('+password')
-        if (!user || !(await user.matchPassword(password))) {
-            return res.status(401).json({ message: 'email หรือ password ไม่ถูกต้อง' })
-        }
+        if (role === "customer") user = await Customer.findOne({ email });
+        else if (role === "provider") user = await Provider.findOne({ email });
+        else return res.status(400).json({ message: "Invalid role" });
 
-        res.json({ token: signToken(user._id), user })
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) return res.status(401).json({ message: "Wrong password" });
+
+        res.json({ token: generateToken(user._id, role), user });
     } catch (err) {
-        res.status(500).json({ message: err.message })
+        res.status(500).json({ message: err.message });
     }
-}
-
-// GET /api/auth/me
-export const getMe = async (req, res) => {
-    res.json(req.user)
-}
+};
