@@ -15,6 +15,7 @@ const Sidebar = () => {
   const menus = {
     customer: [
       { name: '👤 ข้อมูลของฉัน', path: '/profile' },
+      { name: '📦 แพ็กเกจงานแต่ง', path: '/customer/packages' },
       { name: '🔍 ค้นหาสถานที่', path: '/search' },
       { name: '📅 การจองของฉัน', path: '/my-bookings' },
     ],

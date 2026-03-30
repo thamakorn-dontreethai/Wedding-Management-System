@@ -170,6 +170,7 @@ const BookingPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const venueId = searchParams.get('venueId');
+  const packageIdParam = searchParams.get('packageId');
 
   const [venue, setVenue] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -187,6 +188,13 @@ const BookingPage = () => {
   const [selectedFood, setSelectedFood] = useState(null);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [selectedMusic, setSelectedMusic] = useState(null);
+  const [selectedPackage, setSelectedPackage] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('selectedPackage') || 'null');
+    } catch {
+      return null;
+    }
+  });
 
   const toNumber = (value) => {
     const n = Number(value);
@@ -218,6 +226,22 @@ const BookingPage = () => {
       .finally(() => setLoading(false));
   }, [venueId]);
 
+  useEffect(() => {
+    const targetPackageId = packageIdParam || selectedPackage?._id;
+    if (!targetPackageId) return;
+
+    api.get('/packages')
+      .then(({ data }) => {
+        const list = Array.isArray(data) ? data : [];
+        const foundPackage = list.find((pkg) => pkg._id === targetPackageId) || null;
+        setSelectedPackage(foundPackage);
+        if (foundPackage) {
+          localStorage.setItem('selectedPackage', JSON.stringify(foundPackage));
+        }
+      })
+      .catch(() => setSelectedPackage(null));
+  }, [packageIdParam]);
+
   // โหลด provider ใหม่ทุกครั้งที่เปลี่ยนวัน (กรองเฉพาะที่ว่าง)
   useEffect(() => {
     const dateParam = eventDate ? `&date=${eventDate}` : '';
@@ -245,6 +269,7 @@ const BookingPage = () => {
   }, [eventDate]);
 
   const handleMealTypeChange = (id) => {
+    if (selectedPackage) return;
     setMealType(id);
     // clear food selection ถ้า provider ไม่รองรับ meal type ใหม่
     if (selectedFood && selectedFood.supportsMealType !== 'both' && selectedFood.supportsMealType !== id) {
@@ -252,17 +277,31 @@ const BookingPage = () => {
     }
   };
 
-  const toggleAddon = (id) =>
+  const toggleAddon = (id) => {
+    if (selectedPackage) return;
     setAddons(prev => prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]);
+  };
+
+  useEffect(() => {
+    if (!selectedPackage) return;
+
+    // เมื่อเลือกแพ็กเกจ ให้ล็อกตัวเลือกเสริมทั้งหมด
+    setMealType(null);
+    setSelectedFood(null);
+    setSelectedPhoto(null);
+    setSelectedMusic(null);
+    setAddons([]);
+  }, [selectedPackage]);
 
   const selectedMeal = MEAL_OPTIONS.find(m => m.id === mealType);
+  const packagePrice = selectedPackage?.basePrice || 0;
   const mealPrice = (selectedMeal?.pricePerHead || 0) * guestCount;
   const venuePrice = venue?.pricePerSession || 0;
   const addonPrice = FIXED_ADDONS.filter(a => addons.includes(a.id)).reduce((s, a) => s + a.price, 0);
   const foodPrice = selectedFood?.price || 0;
   const photoPrice = selectedPhoto?.price || 0;
   const musicPrice = selectedMusic?.price || 0;
-  const totalPrice = venuePrice + mealPrice + addonPrice + foodPrice + photoPrice + musicPrice;
+  const totalPrice = venuePrice + packagePrice + mealPrice + addonPrice + foodPrice + photoPrice + musicPrice;
   const depositAmount = Math.round(totalPrice * 0.3);
   const venueGuestCount = getVenueGuestCount(venue);
 
@@ -271,6 +310,9 @@ const BookingPage = () => {
     if (guestCount < 1) return alert('จำนวนแขกต้องมีอย่างน้อย 1 คน');
     if (venueGuestCount > 0 && guestCount > venueGuestCount) {
       return alert(`จำนวนแขกเกินความจุสถานที่ (รองรับสูงสุด ${venueGuestCount} คน)`);
+    }
+    if (selectedPackage?.maxGuests > 0 && guestCount > selectedPackage.maxGuests) {
+      return alert(`แพ็กเกจที่เลือก รองรับได้สูงสุด ${selectedPackage.maxGuests} คน`);
     }
     setSubmitting(true);
     try {
@@ -282,7 +324,7 @@ const BookingPage = () => {
       const { data: createdBooking } = await api.post('/bookings', {
         venueId,
         venueName: resolvedVenueName || null,
-        packageId: venueId,
+        packageId: selectedPackage?._id || null,
         eventDate,
         guestCount,
         mealType: mealType || 'buffet',
@@ -335,6 +377,25 @@ const BookingPage = () => {
         </div>
       </div>
 
+      <div className="form-section" style={{ background: '#fff7fb', border: '1px solid #fbcfe8' }}>
+        <h2 className="form-section__title">📦 แพ็กเกจงานแต่ง</h2>
+        {selectedPackage ? (
+          <div>
+            <div style={{ fontWeight: 800, color: '#be185d', marginBottom: 6 }}>{selectedPackage.name}</div>
+            <div style={{ fontSize: 13, color: 'var(--gray-600)' }}>
+              {selectedPackage.maxGuests > 0 ? `รองรับสูงสุด ${selectedPackage.maxGuests} คน` : 'ไม่จำกัดจำนวนแขก'}
+            </div>
+            <div style={{ marginTop: 6, fontWeight: 700, color: 'var(--pink)' }}>
+              ราคาแพ็กเกจ ฿{(selectedPackage.basePrice || 0).toLocaleString()}
+            </div>
+          </div>
+        ) : (
+          <div style={{ fontSize: 13, color: 'var(--gray-500)' }}>
+            ยังไม่ได้เลือกแพ็กเกจ สามารถเลือกได้ที่เมนู "📦 แพ็กเกจงานแต่ง"
+          </div>
+        )}
+      </div>
+
       {/* Step 1 - วันและแขก */}
       <div className="form-section">
         <h2 className="form-section__title">📅 วันจัดงานและจำนวนแขก</h2>
@@ -378,124 +439,135 @@ const BookingPage = () => {
         </div>
       </div>
 
-      {/* Step 2 - อาหาร */}
-      <div className="form-section">
-        <h2 className="form-section__title">🍽️ รูปแบบอาหาร</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-          {/* ไม่เลือกอาหาร */}
-          <div onClick={() => handleMealTypeChange(null)}
-            style={{
-              padding: 20, borderRadius: 16, cursor: 'pointer', transition: 'all 0.2s',
-              border: `2px solid ${mealType === null ? 'var(--pink)' : 'var(--gray-100)'}`,
-              background: mealType === null ? 'var(--pink-bg)' : 'white',
-            }}>
-            <div style={{ fontSize: 32, marginBottom: 8 }}>🚫</div>
-            <div style={{ fontWeight: 700, fontSize: 15, color: mealType === null ? 'var(--pink)' : 'var(--gray-900)', marginBottom: 4 }}>
-              ไม่เลือกอาหาร
+      {selectedPackage ? (
+        <div className="form-section" style={{ background: '#fffbeb', border: '1px solid #fde68a' }}>
+          <h2 className="form-section__title">🔒 การตั้งค่าที่ถูกล็อกโดยแพ็กเกจ</h2>
+          <p style={{ color: '#92400e', fontWeight: 600, fontSize: 13, margin: 0 }}>
+            เมื่อเลือกแพ็กเกจงานแต่งแล้ว จะไม่สามารถเลือกรูปแบบอาหาร ช่างภาพ วงดนตรี และบริการเสริมเพิ่มเติมได้
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Step 2 - อาหาร */}
+          <div className="form-section">
+            <h2 className="form-section__title">🍽️ รูปแบบอาหาร</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+              {/* ไม่เลือกอาหาร */}
+              <div onClick={() => handleMealTypeChange(null)}
+                style={{
+                  padding: 20, borderRadius: 16, cursor: 'pointer', transition: 'all 0.2s',
+                  border: `2px solid ${mealType === null ? 'var(--pink)' : 'var(--gray-100)'}`,
+                  background: mealType === null ? 'var(--pink-bg)' : 'white',
+                }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>🚫</div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: mealType === null ? 'var(--pink)' : 'var(--gray-900)', marginBottom: 4 }}>
+                  ไม่เลือกอาหาร
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 8 }}>จัดเตรียมเองหรือไม่ต้องการ</div>
+                <div style={{ fontWeight: 700, color: 'var(--pink)', fontSize: 14 }}>+฿0</div>
+              </div>
+
+              {MEAL_OPTIONS.map(meal => (
+                <div key={meal.id} onClick={() => handleMealTypeChange(meal.id)}
+                  style={{
+                    padding: 20, borderRadius: 16, cursor: 'pointer', transition: 'all 0.2s',
+                    border: `2px solid ${mealType === meal.id ? 'var(--pink)' : 'var(--gray-100)'}`,
+                    background: mealType === meal.id ? 'var(--pink-bg)' : 'white',
+                  }}>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}>{meal.icon}</div>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: mealType === meal.id ? 'var(--pink)' : 'var(--gray-900)', marginBottom: 4 }}>
+                    {meal.title}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 8 }}>{meal.desc}</div>
+                  <div style={{ fontWeight: 700, color: 'var(--pink)', fontSize: 14 }}>
+                    ฿{meal.pricePerHead.toLocaleString()} / คน
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--gray-500)', marginTop: 4, fontWeight: 600 }}>
+                    รวม {guestCount} คน = ฿{(meal.pricePerHead * guestCount).toLocaleString()}
+                  </div>
+                </div>
+              ))}
             </div>
-            <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 8 }}>จัดเตรียมเองหรือไม่ต้องการ</div>
-            <div style={{ fontWeight: 700, color: 'var(--pink)', fontSize: 14 }}>+฿0</div>
           </div>
 
-          {MEAL_OPTIONS.map(meal => (
-            <div key={meal.id} onClick={() => handleMealTypeChange(meal.id)}
-              style={{
-                padding: 20, borderRadius: 16, cursor: 'pointer', transition: 'all 0.2s',
-                border: `2px solid ${mealType === meal.id ? 'var(--pink)' : 'var(--gray-100)'}`,
-                background: mealType === meal.id ? 'var(--pink-bg)' : 'white',
-              }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>{meal.icon}</div>
-              <div style={{ fontWeight: 700, fontSize: 15, color: mealType === meal.id ? 'var(--pink)' : 'var(--gray-900)', marginBottom: 4 }}>
-                {meal.title}
-              </div>
-              <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 8 }}>{meal.desc}</div>
-              <div style={{ fontWeight: 700, color: 'var(--pink)', fontSize: 14 }}>
-                ฿{meal.pricePerHead.toLocaleString()} / คน
-              </div>
-              <div style={{ fontSize: 12, color: 'var(--gray-500)', marginTop: 4, fontWeight: 600 }}>
-                รวม {guestCount} คน = ฿{(meal.pricePerHead * guestCount).toLocaleString()}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Step 3 - ครัว/อาหารจาก DB (แสดงเฉพาะเมื่อเลือกรูปแบบอาหาร) */}
-      {mealType && (
-        <ProviderSelector
-          title="ครัว / ผู้จัดอาหาร"
-          icon="🍳"
-          providers={foodProviders.filter(p =>
-            !p.supportsMealType || p.supportsMealType === 'both' || p.supportsMealType === mealType
+          {/* Step 3 - ครัว/อาหารจาก DB (แสดงเฉพาะเมื่อเลือกรูปแบบอาหาร) */}
+          {mealType && (
+            <ProviderSelector
+              title="ครัว / ผู้จัดอาหาร"
+              icon="🍳"
+              providers={foodProviders.filter(p =>
+                !p.supportsMealType || p.supportsMealType === 'both' || p.supportsMealType === mealType
+              )}
+              selected={selectedFood}
+              onSelect={setSelectedFood}
+              serviceType="food"
+              hasDate={!!eventDate}
+              mealTypeLabel={mealType === 'buffet' ? 'บุฟเฟต์' : 'โต๊ะจีน'}
+            />
           )}
-          selected={selectedFood}
-          onSelect={setSelectedFood}
-          serviceType="food"
-          hasDate={!!eventDate}
-          mealTypeLabel={mealType === 'buffet' ? 'บุฟเฟต์' : 'โต๊ะจีน'}
-        />
+
+          {/* Step 4 - ช่างภาพจาก DB */}
+          <ProviderSelector
+            title="ช่างภาพ"
+            icon="📸"
+            providers={photoProviders}
+            selected={selectedPhoto}
+            onSelect={setSelectedPhoto}
+            serviceType="photo"
+            hasDate={!!eventDate}
+          />
+
+          {/* Step 5 - วงดนตรีจาก DB */}
+          <ProviderSelector
+            title="วงดนตรี"
+            icon="🎵"
+            providers={musicProviders}
+            selected={selectedMusic}
+            onSelect={setSelectedMusic}
+            serviceType="music"
+            hasDate={!!eventDate}
+          />
+
+          {/* Step 6 - บริการเสริม */}
+          <div className="form-section">
+            <h2 className="form-section__title">✨ บริการเสริม</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              {FIXED_ADDONS.map(service => {
+                const selected = addons.includes(service.id);
+                return (
+                  <div key={service.id} onClick={() => toggleAddon(service.id)}
+                    style={{
+                      padding: 16, borderRadius: 14, cursor: 'pointer', transition: 'all 0.2s',
+                      border: `2px solid ${selected ? 'var(--pink)' : 'var(--gray-100)'}`,
+                      background: selected ? 'var(--pink-bg)' : 'white',
+                      position: 'relative',
+                    }}>
+                    {selected && (
+                      <div style={{
+                        position: 'absolute', top: 10, right: 10,
+                        background: 'var(--pink)', color: 'white',
+                        width: 22, height: 22, borderRadius: '50%',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 12, fontWeight: 700,
+                      }}>✓</div>
+                    )}
+                    <div style={{ fontSize: 28, marginBottom: 6 }}>{service.icon}</div>
+                    <div style={{ fontWeight: 700, fontSize: 14, color: selected ? 'var(--pink)' : 'var(--gray-900)', marginBottom: 4 }}>
+                      {service.title}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 8, lineHeight: 1.4 }}>
+                      {service.desc}
+                    </div>
+                    <div style={{ fontWeight: 800, color: 'var(--pink)', fontSize: 15 }}>
+                      +฿{service.price.toLocaleString()}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
       )}
-
-      {/* Step 4 - ช่างภาพจาก DB */}
-      <ProviderSelector
-        title="ช่างภาพ"
-        icon="📸"
-        providers={photoProviders}
-        selected={selectedPhoto}
-        onSelect={setSelectedPhoto}
-        serviceType="photo"
-        hasDate={!!eventDate}
-      />
-
-      {/* Step 5 - วงดนตรีจาก DB */}
-      <ProviderSelector
-        title="วงดนตรี"
-        icon="🎵"
-        providers={musicProviders}
-        selected={selectedMusic}
-        onSelect={setSelectedMusic}
-        serviceType="music"
-        hasDate={!!eventDate}
-      />
-
-      {/* Step 6 - บริการเสริม */}
-      <div className="form-section">
-        <h2 className="form-section__title">✨ บริการเสริม</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          {FIXED_ADDONS.map(service => {
-            const selected = addons.includes(service.id);
-            return (
-              <div key={service.id} onClick={() => toggleAddon(service.id)}
-                style={{
-                  padding: 16, borderRadius: 14, cursor: 'pointer', transition: 'all 0.2s',
-                  border: `2px solid ${selected ? 'var(--pink)' : 'var(--gray-100)'}`,
-                  background: selected ? 'var(--pink-bg)' : 'white',
-                  position: 'relative',
-                }}>
-                {selected && (
-                  <div style={{
-                    position: 'absolute', top: 10, right: 10,
-                    background: 'var(--pink)', color: 'white',
-                    width: 22, height: 22, borderRadius: '50%',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 12, fontWeight: 700,
-                  }}>✓</div>
-                )}
-                <div style={{ fontSize: 28, marginBottom: 6 }}>{service.icon}</div>
-                <div style={{ fontWeight: 700, fontSize: 14, color: selected ? 'var(--pink)' : 'var(--gray-900)', marginBottom: 4 }}>
-                  {service.title}
-                </div>
-                <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 8, lineHeight: 1.4 }}>
-                  {service.desc}
-                </div>
-                <div style={{ fontWeight: 800, color: 'var(--pink)', fontSize: 15 }}>
-                  +฿{service.price.toLocaleString()}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
 
       {/* Step 7 - หมายเหตุ */}
       <div className="form-section">
@@ -516,33 +588,41 @@ const BookingPage = () => {
           <span>฿{venuePrice.toLocaleString()}</span>
         </div>
         <div className="price-summary__row">
-          <span>🍽️ {selectedMeal ? `${selectedMeal.title} × ${guestCount} คน` : 'ไม่เลือกอาหาร'}</span>
-          <span>฿{mealPrice.toLocaleString()}</span>
+          <span>📦 {selectedPackage ? `แพ็กเกจ ${selectedPackage.name}` : 'ไม่เลือกแพ็กเกจ'}</span>
+          <span>฿{packagePrice.toLocaleString()}</span>
         </div>
-        {selectedFood && (
-          <div className="price-summary__row">
-            <span>🍽️ {selectedFood.firstName} {selectedFood.lastName}</span>
-            <span>฿{(selectedFood.price || 0).toLocaleString()}</span>
-          </div>
+        {!selectedPackage && (
+          <>
+            <div className="price-summary__row">
+              <span>🍽️ {selectedMeal ? `${selectedMeal.title} × ${guestCount} คน` : 'ไม่เลือกอาหาร'}</span>
+              <span>฿{mealPrice.toLocaleString()}</span>
+            </div>
+            {selectedFood && (
+              <div className="price-summary__row">
+                <span>🍽️ {selectedFood.firstName} {selectedFood.lastName}</span>
+                <span>฿{(selectedFood.price || 0).toLocaleString()}</span>
+              </div>
+            )}
+            {selectedPhoto && (
+              <div className="price-summary__row">
+                <span>📸 {selectedPhoto.firstName} {selectedPhoto.lastName}</span>
+                <span>฿{(selectedPhoto.price || 0).toLocaleString()}</span>
+              </div>
+            )}
+            {selectedMusic && (
+              <div className="price-summary__row">
+                <span>🎵 {selectedMusic.firstName} {selectedMusic.lastName}</span>
+                <span>฿{(selectedMusic.price || 0).toLocaleString()}</span>
+              </div>
+            )}
+            {FIXED_ADDONS.filter(a => addons.includes(a.id)).map(a => (
+              <div key={a.id} className="price-summary__row">
+                <span>{a.icon} {a.title}</span>
+                <span>฿{a.price.toLocaleString()}</span>
+              </div>
+            ))}
+          </>
         )}
-        {selectedPhoto && (
-          <div className="price-summary__row">
-            <span>📸 {selectedPhoto.firstName} {selectedPhoto.lastName}</span>
-            <span>฿{(selectedPhoto.price || 0).toLocaleString()}</span>
-          </div>
-        )}
-        {selectedMusic && (
-          <div className="price-summary__row">
-            <span>🎵 {selectedMusic.firstName} {selectedMusic.lastName}</span>
-            <span>฿{(selectedMusic.price || 0).toLocaleString()}</span>
-          </div>
-        )}
-        {FIXED_ADDONS.filter(a => addons.includes(a.id)).map(a => (
-          <div key={a.id} className="price-summary__row">
-            <span>{a.icon} {a.title}</span>
-            <span>฿{a.price.toLocaleString()}</span>
-          </div>
-        ))}
         <div className="price-summary__total">
           <span>ยอดรวมทั้งหมด</span>
           <span>฿{totalPrice.toLocaleString()}</span>

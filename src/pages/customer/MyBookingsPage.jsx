@@ -121,6 +121,21 @@ const MyBookingsPage = () => {
 										</div>
 									</div>
 
+									{booking.packageId && (
+										<div style={{
+											padding: '10px 12px',
+											borderRadius: 10,
+											background: '#fff7fb',
+											border: '1px solid #fbcfe8',
+											fontSize: 13,
+											fontWeight: 600,
+											color: '#be185d',
+											marginBottom: 12,
+										}}>
+											📦 แพ็กเกจที่เลือก: {booking.packageId?.name || 'แพ็กเกจที่บันทึกไว้'}
+										</div>
+									)}
+
 									{/* Price */}
 									<div style={{
 										background: 'var(--pink-bg)', borderRadius: 12,

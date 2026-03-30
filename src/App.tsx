@@ -4,6 +4,7 @@ import ProtectedRoute from './routes/ProtectedRoute';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import SearchPage from './pages/customer/SearchPage';
+import CustomerPackagesPage from './pages/customer/CustomerPackagesPage';
 import MyBookingsPage from './pages/customer/MyBookingsPage';
 import BookingPage from './pages/customer/BookingPage';
 import PaymentPage from './pages/customer/PaymentPage';
@@ -32,6 +33,7 @@ function App() {
           )}
         >
           <Route path="/" element={<SearchPage />} />
+          <Route path="/customer/packages" element={<CustomerPackagesPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/profile" element={
             <ProtectedRoute allowedRoles={['customer']}>
