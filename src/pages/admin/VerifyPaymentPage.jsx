@@ -1,180 +1,180 @@
 import { useEffect, useState } from 'react';
-import Table from '../../components/ui/Table';
+import api from '../../services/api';
 import Modal from '../../components/ui/Modal';
 
-const STORAGE_KEY = 'mockSubmittedPayments';
-const DEFAULT_PAYMENT_IDS = new Set(['PAY001', 'PAY002']);
-
-const readSubmittedPayments = () => {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-  } catch {
-    return [];
-  }
-};
-
 const VerifyPaymentPage = () => {
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedSlip, setSelectedSlip] = useState(null);
-  const [payments, setPayments] = useState([
-    {
-      id: 'PAY001',
-      customer: 'สมชาย',
-      amount: 50000,
-      status: 'pending',
-      slipUrl: 'https://thunder.in.th/wp-content/uploads/2024/06/%E0%B8%AA%E0%B8%A5%E0%B8%B4%E0%B8%9B%E0%B9%82%E0%B8%AD%E0%B8%99%E0%B9%80%E0%B8%87%E0%B8%B4%E0%B8%99.webp',
-    },
-    {
-      id: 'PAY002',
-      customer: 'สมศรี',
-      amount: 30000,
-      status: 'verified',
-      slipUrl: 'https://thunder.in.th/wp-content/uploads/2024/06/%E0%B8%AA%E0%B8%A5%E0%B8%B4%E0%B8%9B%E0%B9%82%E0%B8%AD%E0%B8%99%E0%B9%80%E0%B8%87%E0%B8%B4%E0%B8%99.webp',
-    }
-  ]);
+  const [processing, setProcessing] = useState(null);
 
   useEffect(() => {
-    const submittedPayments = readSubmittedPayments();
-    if (submittedPayments.length > 0) {
-      setPayments((prev) => [...submittedPayments, ...prev]);
-    }
+    api.get('/payments')
+      .then(({ data }) => setPayments(data))
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
-  const syncSubmittedPayments = (nextPayments) => {
-    const submittedOnly = nextPayments.filter((payment) => !DEFAULT_PAYMENT_IDS.has(payment.id));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(submittedOnly));
-  };
-
-  const handleViewSlip = (payment) => {
-    if (!payment.slipUrl) return;
-    setSelectedSlip(payment);
-  };
-
-  const handleStatusChange = (paymentId, status) => {
-    setPayments((prev) => {
-      const next = prev.map((payment) => (
-        payment.id === paymentId ? { ...payment, status } : payment
+  const handleApprove = async (paymentId) => {
+    setProcessing(paymentId);
+    try {
+      await api.put(`/payments/${paymentId}/approve`);
+      setPayments(prev => prev.map(p =>
+        p._id === paymentId ? { ...p, status: 'approved' } : p
       ));
-      syncSubmittedPayments(next);
-      return next;
-    });
-
-    setSelectedSlip((prev) => (prev?.id === paymentId ? { ...prev, status } : prev));
-  };
-
-  const handleDeleteEvidence = (paymentId) => {
-    const shouldDelete = window.confirm('ต้องการลบหลักฐานรายการนี้ใช่หรือไม่?');
-    if (!shouldDelete) return;
-
-    setPayments((prev) => {
-      const next = prev.filter((payment) => payment.id !== paymentId);
-      syncSubmittedPayments(next);
-      return next;
-    });
-
-    if (selectedSlip?.id === paymentId) {
-      setSelectedSlip(null);
+    } catch (err) {
+      alert(err.response?.data?.message || 'เกิดข้อผิดพลาด');
+    } finally {
+      setProcessing(null);
     }
   };
 
-  const pendingCount = payments.filter((payment) => payment.status === 'pending').length;
-  const verifiedCount = payments.filter((payment) => payment.status === 'verified').length;
+  const handleReject = async (paymentId) => {
+    const reason = prompt('กรุณาระบุเหตุผลที่ปฏิเสธ:');
+    if (!reason) return;
+    setProcessing(paymentId);
+    try {
+      await api.put(`/payments/${paymentId}/reject`, { rejectReason: reason });
+      setPayments(prev => prev.map(p =>
+        p._id === paymentId ? { ...p, status: 'rejected' } : p
+      ));
+    } catch (err) {
+      alert(err.response?.data?.message || 'เกิดข้อผิดพลาด');
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const pendingCount = payments.filter(p => p.status === 'pending').length;
+  const approvedCount = payments.filter(p => p.status === 'approved').length;
 
   return (
-    <div className="verify-payment-page">
-      <section className="im-hero">
-        <div className="im-hero__grain" aria-hidden="true" />
-        <div className="im-hero__content">
-          <p className="im-hero__eyebrow">Admin Payment Review</p>
-          <h1 className="im-hero__title">ตรวจสอบหลักฐานการชำระเงิน</h1>
-          <p className="im-hero__desc">อัปเดตสถานะผ่าน dropdown และลบหลักฐานที่ไม่ต้องการได้ทันที</p>
-          <div className="verify-summary">
-            <div className="verify-summary__card">
-              <p className="verify-summary__label">ทั้งหมด</p>
-              <p className="verify-summary__value">{payments.length}</p>
-            </div>
-            <div className="verify-summary__card verify-summary__card--pending">
-              <p className="verify-summary__label">Pending</p>
-              <p className="verify-summary__value verify-summary__value--pending">{pendingCount}</p>
-            </div>
-            <div className="verify-summary__card verify-summary__card--verified">
-              <p className="verify-summary__label">Verified</p>
-              <p className="verify-summary__value verify-summary__value--verified">{verifiedCount}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="verify-table-wrap">
-        <Table
-          variant="pink"
-          headers={['ID', 'ชื่อลูกค้า', 'ยอดเงิน', 'สถานะ', 'จัดการ']}
-          data={payments.map((p) => [
-            <span className="verify-id">{p.id}</span>,
-            p.customer,
-            `฿${typeof p.amount === 'number' ? p.amount.toLocaleString('th-TH') : p.amount}`,
-            <div className="verify-status-wrap">
-              <select
-                value={p.status}
-                onChange={(event) => handleStatusChange(p.id, event.target.value)}
-                className={`verify-status-select ${
-                  p.status === 'verified'
-                    ? 'verify-status-select--verified'
-                    : 'verify-status-select--pending'
-                }`}
-              >
-                <option value="pending">Pending</option>
-                <option value="verified">Verified</option>
-              </select>
-              <span className="verify-status-wrap__icon" aria-hidden="true">
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                  <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </span>
-            </div>,
-            <div className="verify-actions">
-              <button
-                type="button"
-                className="verify-action-btn verify-action-btn--view"
-                onClick={() => handleViewSlip(p)}
-                disabled={!p.slipUrl}
-              >
-                ดูหลักฐาน
-              </button>
-              <button
-                type="button"
-                className="verify-action-btn verify-action-btn--delete"
-                onClick={() => handleDeleteEvidence(p.id)}
-              >
-                ลบหลักฐาน
-              </button>
-            </div>
-          ])}
-        />
+    <div>
+      <div className="page-header">
+        <h1 className="page-header__title">✅ ตรวจสอบหลักฐานการชำระเงิน</h1>
+        <p className="page-header__sub">อนุมัติหรือปฏิเสธการชำระเงินมัดจำของลูกค้า</p>
       </div>
 
-      <Modal
-        isOpen={Boolean(selectedSlip)}
-        onClose={() => setSelectedSlip(null)}
-        title={selectedSlip ? `หลักฐานการชำระเงิน ${selectedSlip.id}` : 'หลักฐานการชำระเงิน'}
-      >
-        {selectedSlip?.slipUrl ? (
-          <div className="verify-modal-content">
-            <img
-              src={selectedSlip.slipUrl}
-              alt={`หลักฐานการชำระเงิน ${selectedSlip.id}`}
-              className="verify-modal-content__image"
-            />
-            <a
-              href={selectedSlip.slipUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="verify-modal-content__link"
-            >
-              เปิดภาพเต็มขนาด
-            </a>
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 24 }}>
+        {[
+          { label: 'ทั้งหมด', value: payments.length, color: 'var(--gray-700)', bg: 'var(--gray-50)' },
+          { label: 'รอตรวจ', value: pendingCount, color: '#d97706', bg: '#fffbeb' },
+          { label: 'อนุมัติแล้ว', value: approvedCount, color: '#16a34a', bg: '#f0fdf4' },
+        ].map((s, i) => (
+          <div key={i} style={{
+            padding: '16px 20px', borderRadius: 14,
+            background: s.bg, textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 28, fontWeight: 800, color: s.color }}>{s.value}</div>
+            <div style={{ fontSize: 13, color: 'var(--gray-500)', marginTop: 4 }}>{s.label}</div>
           </div>
-        ) : (
-          <p className="verify-modal-content__empty">ไม่พบหลักฐานการชำระเงิน</p>
+        ))}
+      </div>
+
+      {loading ? (
+        <div className="loading-state"><div className="loading-dots"><span /><span /><span /></div></div>
+      ) : payments.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state__icon">💳</div>
+          <p className="empty-state__title">ยังไม่มีการชำระเงิน</p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {payments.map(p => (
+            <div key={p._id} className="verify-card">
+              <div className="verify-card__header">
+                <div>
+                  <div className="verify-card__title">
+                    {p.customerId?.username || p.customerId?.firstName || 'ลูกค้า'}
+                    <span style={{ fontSize: 12, color: 'var(--gray-400)', marginLeft: 8 }}>
+                      งวด {p.installment}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--gray-400)', marginTop: 2 }}>
+                    {new Date(p.createdAt).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </div>
+                </div>
+                <div style={{
+                  padding: '4px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700,
+                  background: p.status === 'approved' ? '#f0fdf4' : p.status === 'rejected' ? '#fff5f5' : '#fffbeb',
+                  color: p.status === 'approved' ? '#16a34a' : p.status === 'rejected' ? '#dc2626' : '#d97706',
+                }}>
+                  {p.status === 'approved' ? '✅ อนุมัติแล้ว' : p.status === 'rejected' ? '❌ ปฏิเสธ' : '⏳ รอตรวจสอบ'}
+                </div>
+              </div>
+
+              <div className="verify-card__body">
+                {/* Slip */}
+                <div className="verify-card__slip">
+                  {p.slipUrl ? (
+                    <img src={p.slipUrl} alt="สลิป" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : '🧾'}
+                </div>
+
+                {/* Info */}
+                <div className="verify-card__info">
+                  <div className="verify-card__row">
+                    <span>ยอดชำระ</span>
+                    <span style={{ color: 'var(--pink)', fontWeight: 800, fontSize: 16 }}>
+                      ฿{p.amount?.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="verify-card__row">
+                    <span>วันที่โอน</span>
+                    <span>{p.transferDate ? new Date(p.transferDate).toLocaleDateString('th-TH') : '-'}</span>
+                  </div>
+                  <div className="verify-card__row">
+                    <span>ธนาคาร</span>
+                    <span>{p.bankName || '-'}</span>
+                  </div>
+                  <div className="verify-card__row">
+                    <span>การจอง</span>
+                    <span style={{ fontSize: 12 }}>{p.bookingId?.venueId?.name || p.bookingId?.venueName || '-'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              {p.status === 'pending' && (
+                <div className="verify-card__actions">
+                  {p.slipUrl && (
+                    <button onClick={() => setSelectedSlip(p)}
+                      style={{
+                        padding: '8px 16px', borderRadius: 10, border: '2px solid var(--pink-border)',
+                        background: 'white', color: 'var(--pink)', fontWeight: 600, cursor: 'pointer', fontSize: 13,
+                      }}>
+                      🔍 ดูสลิป
+                    </button>
+                  )}
+                  <button onClick={() => handleReject(p._id)} disabled={processing === p._id}
+                    style={{
+                      padding: '8px 16px', borderRadius: 10, border: '2px solid #fca5a5',
+                      background: '#fff5f5', color: '#dc2626', fontWeight: 600, cursor: 'pointer', fontSize: 13,
+                    }}>
+                    ❌ ปฏิเสธ
+                  </button>
+                  <button onClick={() => handleApprove(p._id)} disabled={processing === p._id}
+                    style={{
+                      padding: '8px 16px', borderRadius: 10, border: 'none',
+                      background: 'linear-gradient(135deg, #86efac, #16a34a)',
+                      color: 'white', fontWeight: 700, cursor: 'pointer', fontSize: 13,
+                    }}>
+                    {processing === p._id ? '⏳...' : '✅ อนุมัติ'}
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Slip Modal */}
+      <Modal isOpen={!!selectedSlip} onClose={() => setSelectedSlip(null)}
+        title="หลักฐานการชำระเงิน">
+        {selectedSlip?.slipUrl && (
+          <img src={selectedSlip.slipUrl} alt="สลิป"
+            style={{ width: '100%', borderRadius: 12, maxHeight: 500, objectFit: 'contain' }} />
         )}
       </Modal>
     </div>

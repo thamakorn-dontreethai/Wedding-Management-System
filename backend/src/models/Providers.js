@@ -8,10 +8,12 @@ const providerSchema = new mongoose.Schema({
     password: { type: String, required: true, minlength: 6 },
     phone: { type: String },
     serviceType: { type: String, required: true, enum: ["food", "music", "photo"] },
+    supportsMealType: { type: String, enum: ["buffet", "chinese", "both"], default: "both" }, // สำหรับ food provider
     price: { type: Number, default: 500, min: 0 },
     maxGuests: { type: Number, default: 0 },
     bankName: { type: String },
     bankAccount: { type: String },
+    unavailableDates: [{ dateKey: { type: String }, note: { type: String } }],
 }, { timestamps: true });
 
 providerSchema.pre("save", async function (next) {
@@ -28,4 +30,4 @@ providerSchema.set("toJSON", {
     transform: (_, ret) => { delete ret.password; return ret; }
 });
 
-module.exports = mongoose.model("Provider", providerSchema);
+module.exports = mongoose.model("provider", providerSchema);

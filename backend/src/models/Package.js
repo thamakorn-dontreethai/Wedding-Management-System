@@ -3,8 +3,9 @@ const mongoose = require("mongoose");
 const packageSchema = new mongoose.Schema({
     name: { type: String, required: true },
     description: { type: String },
-    venueId: { type: mongoose.Schema.Types.ObjectId, ref: "Venue", required: true },
+    venueId: { type: mongoose.Schema.Types.ObjectId, ref: "Venue", default: null },
     basePrice: { type: Number, required: true },
+    maxGuests: { type: Number, default: 0 },
     includeFood: { type: Boolean, default: false },
     includeMusic: { type: Boolean, default: false },
     includePhoto: { type: Boolean, default: false },

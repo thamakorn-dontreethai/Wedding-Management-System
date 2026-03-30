@@ -1,121 +1,95 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import Table from '../../components/ui/Table';
+import api from '../../services/api';
 import Badge from '../../components/ui/Badge';
 
-const STORAGE_KEY = 'mockSubmittedPayments';
-const DEFAULT_PAYMENTS = [
-  { id: 'PAY001', customer: 'สมชาย', amount: 50000, status: 'pending', slipUrl: 'https://thunder.in.th/wp-content/uploads/2024/06/%E0%B8%AA%E0%B8%A5%E0%B8%B4%E0%B8%9B%E0%B9%82%E0%B8%AD%E0%B8%99%E0%B9%80%E0%B8%87%E0%B8%B4%E0%B8%99.webp' },
-  { id: 'PAY002', customer: 'สมศรี', amount: 30000, status: 'verified', slipUrl: 'https://thunder.in.th/wp-content/uploads/2024/06/%E0%B8%AA%E0%B8%A5%E0%B8%B4%E0%B8%9B%E0%B9%82%E0%B8%AD%E0%B8%99%E0%B9%80%E0%B8%87%E0%B8%B4%E0%B8%99.webp' },
-];
-
-const readSubmittedPayments = () => {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-  } catch {
-    return [];
-  }
-};
-
 const DashboardPage = () => {
-  const [payments, setPayments] = useState(DEFAULT_PAYMENTS);
+  const [stats, setStats] = useState({ revenue: 0, bookings: 0, pending: 0 });
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const submitted = readSubmittedPayments();
-    if (submitted.length > 0) {
-      setPayments([...submitted, ...DEFAULT_PAYMENTS]);
-    }
+    Promise.all([
+      api.get('/payments'),
+      api.get('/bookings/all'),
+    ]).then(([payRes, bookRes]) => {
+      const pays = payRes.data || [];
+      const books = bookRes.data || [];
+
+      const revenue = pays.filter(p => p.status === 'approved').reduce((s, p) => s + p.amount, 0);
+      const pending = pays.filter(p => p.status === 'pending').length;
+
+      setPayments(pays.slice(0, 5));
+      setStats({ revenue, bookings: books.length, pending });
+    }).catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
-  const latestPayments = useMemo(() => payments.slice(0, 5), [payments]);
-  const totalRevenue = useMemo(
-    () => payments
-      .filter((payment) => payment.status === 'verified')
-      .reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0),
-    [payments]
-  );
-  const pendingPayments = useMemo(
-    () => payments.filter((payment) => payment.status === 'pending').length,
-    [payments]
-  );
-
-  const summary = {
-    revenue: totalRevenue,
-    bookings: payments.length,
-    pendingPayments,
-  };
-
-  const latestPackages = [
-    { name: 'Standard Wedding', price: 150000, maxGuests: 200 },
-    { name: 'Grand Luxury', price: 450000, maxGuests: 500 },
-  ];
-
   return (
-    <div className="admin-dashboard">
+    <div>
       <div className="page-header">
         <h1 className="page-header__title">ภาพรวมระบบ (Admin Dashboard)</h1>
-        <p className="page-header__sub">ติดตามยอดชำระเงินล่าสุดและข้อมูลแพ็กเกจแบบเรียลไทม์</p>
+        <p className="page-header__sub">ติดตามยอดชำระเงินล่าสุดและข้อมูลการจองแบบเรียลไทม์</p>
       </div>
 
-      <div className="admin-dashboard__stats">
-        <div className="admin-dashboard__stat-card">
-          <p className="admin-dashboard__stat-title">รายได้ทั้งหมด</p>
-          <p className="admin-dashboard__stat admin-dashboard__stat--revenue">฿{summary.revenue.toLocaleString('th-TH')}</p>
-        </div>
-        <div className="admin-dashboard__stat-card">
-          <p className="admin-dashboard__stat-title">จำนวนการจอง</p>
-          <p className="admin-dashboard__stat admin-dashboard__stat--bookings">{summary.bookings} งาน</p>
-        </div>
-        <div className="admin-dashboard__stat-card">
-          <p className="admin-dashboard__stat-title">รอตรวจสอบยอด</p>
-          <p className="admin-dashboard__stat admin-dashboard__stat--pending">{summary.pendingPayments} รายการ</p>
-        </div>
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
+        {[
+          { label: 'รายได้ทั้งหมด', value: `฿${stats.revenue.toLocaleString()}`, icon: '💰', color: '#16a34a' },
+          { label: 'จำนวนการจอง', value: `${stats.bookings} งาน`, icon: '📅', color: 'var(--pink)' },
+          { label: 'รอตรวจสอบยอด', value: `${stats.pending} รายการ`, icon: '⏳', color: '#d97706' },
+        ].map((s, i) => (
+          <div key={i} className="stat-card">
+            <div className="stat-card__icon">{s.icon}</div>
+            <div>
+              <div className="stat-card__value" style={{ color: s.color }}>{s.value}</div>
+              <div className="stat-card__label">{s.label}</div>
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="admin-dashboard__panels">
-        <div className="admin-dashboard__panel">
-          <div className="admin-dashboard__panel-header">
-            <h2 className="admin-dashboard__panel-title">รายการชำระเงินล่าสุด</h2>
-            <Link to="/admin/verify-payment" className="admin-dashboard__link">ดูทั้งหมด</Link>
-          </div>
-          <Table
-            variant="pink"
-            headers={['ID', 'ลูกค้า', 'ยอดชำระ', 'สถานะ', 'ใบเสร็จ']}
-            data={latestPayments.map((payment) => [
-              payment.id,
-              payment.customer,
-              `฿${payment.amount.toLocaleString('th-TH')}`,
-              <Badge status={payment.status} />,
-              <div className="admin-dashboard__receipt-cell">
-                {payment.slipUrl ? (
-                  <a href={payment.slipUrl} target="_blank" rel="noreferrer" className="admin-dashboard__receipt-link">
-                    หลักฐาน
-                  </a>
-                ) : (
-                  <span className="admin-dashboard__receipt-empty">-</span>
-                )}
-              </div>,
-            ])}
-          />
+      {/* Recent Payments */}
+      <div className="chart-card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h2 className="chart-card__title">รายการชำระเงินล่าสุด</h2>
+          <Link to="/admin/verify-payment" style={{ fontSize: 13, color: 'var(--pink)', fontWeight: 600 }}>
+            ดูทั้งหมด →
+          </Link>
         </div>
-
-        <div className="admin-dashboard__panel">
-          <div className="admin-dashboard__panel-header">
-            <h2 className="admin-dashboard__panel-title">แพ็กเกจล่าสุด</h2>
-            <Link to="/admin/packages" className="admin-dashboard__link">จัดการแพ็กเกจ</Link>
+        {loading ? (
+          <div className="loading-state"><div className="loading-dots"><span /><span /><span /></div></div>
+        ) : payments.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state__icon">💳</div>
+            <p className="empty-state__title">ยังไม่มีการชำระเงิน</p>
           </div>
-          <Table
-            variant="pink"
-            headers={['ชื่อแพ็กเกจ', 'ราคา', 'จำนวนแขกสูงสุด']}
-            data={latestPackages.map((pkg) => [
-              pkg.name,
-              `฿${pkg.price.toLocaleString('th-TH')}`,
-              String(pkg.maxGuests),
-            ])}
-          />
-        </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {payments.map(p => (
+              <div key={p._id} style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '12px 16px', background: 'var(--gray-50)', borderRadius: 12,
+              }}>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: 14 }}>
+                    {p.customerId?.username || p.customerId?.firstName || 'ลูกค้า'}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--gray-400)' }}>
+                    งวด {p.installment} · {new Date(p.createdAt).toLocaleDateString('th-TH')}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontWeight: 700, color: 'var(--pink)' }}>฿{p.amount?.toLocaleString()}</div>
+                  <Badge status={p.status} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 };
+
 export default DashboardPage;

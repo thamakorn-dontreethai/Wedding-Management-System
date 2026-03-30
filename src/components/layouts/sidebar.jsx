@@ -14,9 +14,9 @@ const Sidebar = () => {
 
   const menus = {
     customer: [
+      { name: '👤 ข้อมูลของฉัน', path: '/profile' },
       { name: '🔍 ค้นหาสถานที่', path: '/search' },
       { name: '📅 การจองของฉัน', path: '/my-bookings' },
-      { name: '💳 แจ้งชำระเงิน', path: '/payment' },
     ],
     admin: [
       { name: '📊 Dashboard', path: '/admin/dashboard' },
@@ -24,8 +24,10 @@ const Sidebar = () => {
       { name: '✅ ตรวจสอบยอดเงิน', path: '/admin/verify-payment' },
     ],
     provider: [
+      { name: '👤 ข้อมูลของฉัน', path: '/provider/profile' },
       { name: '📋 รายการสั่งงาน', path: '/orders' },
       { name: '🗓️ ตารางคิวงาน', path: '/schedule' },
+      { name: '📊 รายงาน', path: '/provider/report' },
     ],
   };
 

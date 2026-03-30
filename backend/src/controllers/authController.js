@@ -90,3 +90,30 @@ exports.login = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
+// GET /api/auth/me
+exports.getMe = async (req, res) => {
+    try {
+        const customer = await Customer.findById(req.user.id);
+        if (!customer) return res.status(404).json({ message: "User not found" });
+        res.json(customer);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+// PUT /api/auth/me
+exports.updateMe = async (req, res) => {
+    try {
+        const { username, phone, address } = req.body;
+        const customer = await Customer.findByIdAndUpdate(
+            req.user.id,
+            { username, phone, address },
+            { new: true, runValidators: true }
+        );
+        if (!customer) return res.status(404).json({ message: "User not found" });
+        res.json(customer);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};

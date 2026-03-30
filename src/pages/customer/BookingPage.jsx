@@ -64,17 +64,20 @@ const SERVICE_ROLE_LABELS = {
   music: 'บัญชีวงดนตรี',
 };
 
-const ProviderSelector = ({ title, icon, providers, selected, onSelect, serviceType }) => (
+const MEAL_TYPE_LABEL = { buffet: '🍽️ บุฟเฟต์', chinese: '🥢 โต๊ะจีน', both: '🍽️🥢 ทั้งสองแบบ' };
+
+const ProviderSelector = ({ title, icon, providers, selected, onSelect, serviceType, hasDate, mealTypeLabel }) => (
   <div className="form-section">
     <h2 className="form-section__title">{icon} {title}</h2>
 
     {providers.length === 0 ? (
       <div style={{
         padding: 20, textAlign: 'center',
-        background: 'var(--gray-50)', borderRadius: 12,
-        color: 'var(--gray-400)', fontSize: 14
+        background: hasDate ? '#fffbeb' : 'var(--gray-50)', borderRadius: 12,
+        color: hasDate ? '#d97706' : 'var(--gray-400)', fontSize: 14, fontWeight: hasDate ? 600 : 400,
+        border: hasDate ? '1px solid #fde68a' : 'none',
       }}>
-        ยังไม่มี{title}ในระบบ
+        {hasDate ? `⛔ ไม่มี${title}ที่ว่างในวันที่เลือก` : `ยังไม่มี${title}ในระบบ`}
       </div>
     ) : (
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -137,6 +140,11 @@ const ProviderSelector = ({ title, icon, providers, selected, onSelect, serviceT
             <div style={{ fontSize: 11, color: 'var(--pink)', marginBottom: 4, fontWeight: 700 }}>
               🏷️ {SERVICE_ROLE_LABELS[p.serviceType] || SERVICE_ROLE_LABELS[serviceType] || 'บัญชีผู้ให้บริการ'}
             </div>
+            {p.serviceType === 'food' && p.supportsMealType && (
+              <div style={{ fontSize: 11, color: '#d97706', fontWeight: 700, marginBottom: 4 }}>
+                {MEAL_TYPE_LABEL[p.supportsMealType] || ''}
+              </div>
+            )}
             <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 6 }}>
               📞 {p.phone || '-'}
             </div>
@@ -171,7 +179,7 @@ const BookingPage = () => {
   const [photoProviders, setPhotoProviders] = useState([]);
   const [musicProviders, setMusicProviders] = useState([]);
 
-  const [mealType, setMealType] = useState('buffet');
+  const [mealType, setMealType] = useState(null);
   const [guestCount, setGuestCount] = useState(1);
   const [eventDate, setEventDate] = useState('');
   const [addons, setAddons] = useState([]);
@@ -190,45 +198,59 @@ const BookingPage = () => {
     return toNumber(venueData?.guestCount) || toNumber(venueData?.capacity) || fallbackCapacity;
   };
 
+  // โหลด venue ครั้งเดียว
   useEffect(() => {
     if (!venueId) return;
-    Promise.allSettled([
-      api.get(`/venues/${venueId}`),
-      api.get('/providers?serviceType=food'),
-      api.get('/providers?serviceType=photo'),
-      api.get('/providers?serviceType=music'),
-    ]).then(([venueRes, foodRes, photoRes, musicRes]) => {
-      let resolvedVenue = null;
-
-      if (venueRes.status === 'fulfilled' && venueRes.value?.data) {
-        resolvedVenue = venueRes.value.data;
-      } else {
+    api.get(`/venues/${venueId}`)
+      .then(({ data }) => {
+        setVenue(data);
+        const defaultGuestCount = getVenueGuestCount(data);
+        setGuestCount(defaultGuestCount > 0 ? defaultGuestCount : 1);
+      })
+      .catch(() => {
         const mockVenue = MOCK_VENUES.find((item) => item._id === venueId);
         if (mockVenue) {
-          resolvedVenue = mockVenue;
+          setVenue(mockVenue);
+          const defaultGuestCount = getVenueGuestCount(mockVenue);
+          setGuestCount(defaultGuestCount > 0 ? defaultGuestCount : 1);
         }
-      }
-
-      if (resolvedVenue) {
-        setVenue(resolvedVenue);
-        const defaultGuestCount = getVenueGuestCount(resolvedVenue);
-        setGuestCount(defaultGuestCount > 0 ? defaultGuestCount : 1);
-      }
-
-      if (foodRes.status === 'fulfilled') {
-        setFoodProviders(Array.isArray(foodRes.value?.data) ? foodRes.value.data : []);
-      }
-
-      if (photoRes.status === 'fulfilled') {
-        setPhotoProviders(Array.isArray(photoRes.value?.data) ? photoRes.value.data : []);
-      }
-
-      if (musicRes.status === 'fulfilled') {
-        setMusicProviders(Array.isArray(musicRes.value?.data) ? musicRes.value.data : []);
-      }
-    }).catch(console.error)
+      })
       .finally(() => setLoading(false));
   }, [venueId]);
+
+  // โหลด provider ใหม่ทุกครั้งที่เปลี่ยนวัน (กรองเฉพาะที่ว่าง)
+  useEffect(() => {
+    const dateParam = eventDate ? `&date=${eventDate}` : '';
+    Promise.allSettled([
+      api.get(`/providers?serviceType=food${dateParam}`),
+      api.get(`/providers?serviceType=photo${dateParam}`),
+      api.get(`/providers?serviceType=music${dateParam}`),
+    ]).then(([foodRes, photoRes, musicRes]) => {
+      if (foodRes.status === 'fulfilled') {
+        const list = Array.isArray(foodRes.value?.data) ? foodRes.value.data : [];
+        setFoodProviders(list);
+        if (selectedFood && !list.find(p => p._id === selectedFood._id)) setSelectedFood(null);
+      }
+      if (photoRes.status === 'fulfilled') {
+        const list = Array.isArray(photoRes.value?.data) ? photoRes.value.data : [];
+        setPhotoProviders(list);
+        if (selectedPhoto && !list.find(p => p._id === selectedPhoto._id)) setSelectedPhoto(null);
+      }
+      if (musicRes.status === 'fulfilled') {
+        const list = Array.isArray(musicRes.value?.data) ? musicRes.value.data : [];
+        setMusicProviders(list);
+        if (selectedMusic && !list.find(p => p._id === selectedMusic._id)) setSelectedMusic(null);
+      }
+    }).catch(console.error);
+  }, [eventDate]);
+
+  const handleMealTypeChange = (id) => {
+    setMealType(id);
+    // clear food selection ถ้า provider ไม่รองรับ meal type ใหม่
+    if (selectedFood && selectedFood.supportsMealType !== 'both' && selectedFood.supportsMealType !== id) {
+      setSelectedFood(null);
+    }
+  };
 
   const toggleAddon = (id) =>
     setAddons(prev => prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]);
@@ -263,7 +285,7 @@ const BookingPage = () => {
         packageId: venueId,
         eventDate,
         guestCount,
-        mealType,
+        mealType: mealType || 'buffet',
         addFood: !!selectedFood,
         addPhoto: !!selectedPhoto,
         addMusic: !!selectedMusic,
@@ -359,9 +381,24 @@ const BookingPage = () => {
       {/* Step 2 - อาหาร */}
       <div className="form-section">
         <h2 className="form-section__title">🍽️ รูปแบบอาหาร</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+          {/* ไม่เลือกอาหาร */}
+          <div onClick={() => handleMealTypeChange(null)}
+            style={{
+              padding: 20, borderRadius: 16, cursor: 'pointer', transition: 'all 0.2s',
+              border: `2px solid ${mealType === null ? 'var(--pink)' : 'var(--gray-100)'}`,
+              background: mealType === null ? 'var(--pink-bg)' : 'white',
+            }}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>🚫</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: mealType === null ? 'var(--pink)' : 'var(--gray-900)', marginBottom: 4 }}>
+              ไม่เลือกอาหาร
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 8 }}>จัดเตรียมเองหรือไม่ต้องการ</div>
+            <div style={{ fontWeight: 700, color: 'var(--pink)', fontSize: 14 }}>+฿0</div>
+          </div>
+
           {MEAL_OPTIONS.map(meal => (
-            <div key={meal.id} onClick={() => setMealType(meal.id)}
+            <div key={meal.id} onClick={() => handleMealTypeChange(meal.id)}
               style={{
                 padding: 20, borderRadius: 16, cursor: 'pointer', transition: 'all 0.2s',
                 border: `2px solid ${mealType === meal.id ? 'var(--pink)' : 'var(--gray-100)'}`,
@@ -383,6 +420,22 @@ const BookingPage = () => {
         </div>
       </div>
 
+      {/* Step 3 - ครัว/อาหารจาก DB (แสดงเฉพาะเมื่อเลือกรูปแบบอาหาร) */}
+      {mealType && (
+        <ProviderSelector
+          title="ครัว / ผู้จัดอาหาร"
+          icon="🍳"
+          providers={foodProviders.filter(p =>
+            !p.supportsMealType || p.supportsMealType === 'both' || p.supportsMealType === mealType
+          )}
+          selected={selectedFood}
+          onSelect={setSelectedFood}
+          serviceType="food"
+          hasDate={!!eventDate}
+          mealTypeLabel={mealType === 'buffet' ? 'บุฟเฟต์' : 'โต๊ะจีน'}
+        />
+      )}
+
       {/* Step 4 - ช่างภาพจาก DB */}
       <ProviderSelector
         title="ช่างภาพ"
@@ -391,6 +444,7 @@ const BookingPage = () => {
         selected={selectedPhoto}
         onSelect={setSelectedPhoto}
         serviceType="photo"
+        hasDate={!!eventDate}
       />
 
       {/* Step 5 - วงดนตรีจาก DB */}
@@ -401,6 +455,7 @@ const BookingPage = () => {
         selected={selectedMusic}
         onSelect={setSelectedMusic}
         serviceType="music"
+        hasDate={!!eventDate}
       />
 
       {/* Step 6 - บริการเสริม */}
@@ -461,7 +516,7 @@ const BookingPage = () => {
           <span>฿{venuePrice.toLocaleString()}</span>
         </div>
         <div className="price-summary__row">
-          <span>🍽️ {selectedMeal?.title} × {guestCount} คน</span>
+          <span>🍽️ {selectedMeal ? `${selectedMeal.title} × ${guestCount} คน` : 'ไม่เลือกอาหาร'}</span>
           <span>฿{mealPrice.toLocaleString()}</span>
         </div>
         {selectedFood && (

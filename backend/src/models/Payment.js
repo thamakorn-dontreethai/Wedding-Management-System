@@ -5,8 +5,8 @@ const paymentSchema = new mongoose.Schema({
     customerId: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", required: true },
     installment: { type: Number, required: true, enum: [1, 2] },
     amount: { type: Number, required: true },
-    slipUrl: { type: String, required: true },
-    transferDate: { type: Date, required: true },
+    slipUrl: { type: String, default: "" },       // ✅ ไม่ required
+    transferDate: { type: Date, default: Date.now },  // ✅ default วันนี้
     bankName: { type: String },
     status: {
         type: String,

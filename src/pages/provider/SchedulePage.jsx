@@ -23,12 +23,10 @@ const SchedulePage = () => {
   const [pricingSaving, setPricingSaving] = useState(false);
   const [pricingMessage, setPricingMessage] = useState('');
   const [pricingError, setPricingError] = useState('');
-  const [unavailableDates, setUnavailableDates] = useState([
-    {
-      dateKey: makeDateKey(todayDate.getFullYear(), todayDate.getMonth(), 14),
-      note: 'ติดงานแต่งงาน (Ballroom)',
-    },
-  ]);
+  const [unavailableDates, setUnavailableDates] = useState([]);
+  const [availSaving, setAvailSaving] = useState(false);
+  const [availMsg, setAvailMsg] = useState('');
+  const [orders, setOrders] = useState([]);
 
   const currentYear = currentMonth.getFullYear();
   const currentMonthIndex = currentMonth.getMonth();
@@ -47,6 +45,19 @@ const SchedulePage = () => {
     return map;
   }, [unavailableDates, monthPrefix]);
 
+  const bookedMap = useMemo(() => {
+    const map = new Map();
+    orders.forEach((order) => {
+      const d = new Date(order.eventDate);
+      const key = makeDateKey(d.getFullYear(), d.getMonth(), d.getDate());
+      if (!key.startsWith(monthPrefix)) return;
+      const day = d.getDate();
+      if (!map.has(day)) map.set(day, []);
+      map.get(day).push(order.venueName || 'งานแต่งงาน');
+    });
+    return map;
+  }, [orders, monthPrefix]);
+
   const calendarCells = useMemo(
     () => [
       ...Array.from({ length: leadingEmptyCells }, (_, idx) => ({ key: `blank-${idx}`, isBlank: true })),
@@ -61,7 +72,8 @@ const SchedulePage = () => {
   );
   const totalDays = daysInMonth;
   const unavailableCount = unavailableMap.size;
-  const availableCount = totalDays - unavailableCount;
+  const bookedCount = bookedMap.size;
+  const availableCount = totalDays - unavailableCount - bookedCount;
 
   const goToPreviousMonth = () => {
     setCurrentMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
@@ -73,30 +85,34 @@ const SchedulePage = () => {
 
   useEffect(() => {
     if (!token) return;
-    if (isFoodProvider) {
-      setPricingLoading(false);
-      setPricingError('');
-      setPricingMessage('');
-      return;
-    }
 
-    const fetchMyPricing = async () => {
+    const fetchProfile = async () => {
       setPricingLoading(true);
       setPricingError('');
       try {
-        const { data } = await api.get('/providers/me', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const nextPrice = Number(data?.price);
-        setLaborPriceInput(String(Number.isFinite(nextPrice) ? Math.max(0, nextPrice) : 500));
+        const [profileRes, ordersRes] = await Promise.all([
+          api.get('/providers/me', { headers: { Authorization: `Bearer ${token}` } }),
+          api.get('/providers/me/orders', { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+        const data = profileRes.data;
+        if (!isFoodProvider) {
+          const nextPrice = Number(data?.price);
+          setLaborPriceInput(String(Number.isFinite(nextPrice) ? Math.max(0, nextPrice) : 500));
+        }
+        if (Array.isArray(data?.unavailableDates)) {
+          setUnavailableDates(data.unavailableDates);
+        }
+        if (Array.isArray(ordersRes.data)) {
+          setOrders(ordersRes.data);
+        }
       } catch (err) {
-        setPricingError(err.response?.data?.message || 'โหลดค่าค่าแรงไม่สำเร็จ');
+        setPricingError(err.response?.data?.message || 'โหลดข้อมูลไม่สำเร็จ');
       } finally {
         setPricingLoading(false);
       }
     };
 
-    fetchMyPricing();
+    fetchProfile();
   }, [token, isFoodProvider]);
 
   const handleSavePricing = async () => {
@@ -127,7 +143,7 @@ const SchedulePage = () => {
     }
   };
 
-  const handleAddUnavailableDate = (event) => {
+  const handleAddUnavailableDate = async (event) => {
     event.preventDefault();
 
     const selected = new Date(date);
@@ -139,16 +155,29 @@ const SchedulePage = () => {
     const dateKey = makeDateKey(year, monthIndex, day);
     const details = note.trim() || 'ไม่สะดวกรับงาน';
 
-    setUnavailableDates((prev) => {
-      const withoutSameDate = prev.filter((item) => item.dateKey !== dateKey);
-      return [...withoutSameDate, { dateKey, note: details }];
-    });
+    const next = [
+      ...unavailableDates.filter((item) => item.dateKey !== dateKey),
+      { dateKey, note: details },
+    ];
 
+    setUnavailableDates(next);
     setCurrentMonth(new Date(year, monthIndex, 1));
-
     setDate('');
     setNote('');
     setIsModalOpen(false);
+
+    setAvailSaving(true);
+    setAvailMsg('');
+    try {
+      await api.put('/providers/me/availability', { unavailableDates: next }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setAvailMsg('บันทึกวันที่ไม่สะดวกสำเร็จ');
+    } catch {
+      setAvailMsg('บันทึกไม่สำเร็จ กรุณาลองใหม่');
+    } finally {
+      setAvailSaving(false);
+    }
   };
 
   return (
@@ -168,19 +197,31 @@ const SchedulePage = () => {
               <p className="provider-orders__stat-label">ว่างรับงาน</p>
               <p className="provider-orders__stat-value">{availableCount}</p>
             </div>
+            <div className="provider-orders__stat-card" style={{ borderTop: '3px solid #f59e0b' }}>
+              <p className="provider-orders__stat-label">มีงานในคิว</p>
+              <p className="provider-orders__stat-value" style={{ color: '#f59e0b' }}>{bookedCount}</p>
+            </div>
             <div className="provider-orders__stat-card provider-orders__stat-card--pending">
               <p className="provider-orders__stat-label">ไม่สะดวก</p>
               <p className="provider-orders__stat-value">{unavailableCount}</p>
             </div>
           </div>
 
-          <Button
-            variant="primary"
-            className="provider-schedule__add-btn"
-            onClick={() => setIsModalOpen(true)}
-          >
-            + เพิ่มวันที่ไม่สะดวกรับงาน
-          </Button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {availMsg && (
+              <span style={{ fontSize: 12, fontWeight: 600, color: availMsg.includes('สำเร็จ') ? '#16a34a' : '#dc2626' }}>
+                {availMsg}
+              </span>
+            )}
+            {availSaving && <span style={{ fontSize: 12, color: 'var(--gray-400)' }}>กำลังบันทึก...</span>}
+            <Button
+              variant="primary"
+              className="provider-schedule__add-btn"
+              onClick={() => setIsModalOpen(true)}
+            >
+              + เพิ่มวันที่ไม่สะดวกรับงาน
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -233,6 +274,7 @@ const SchedulePage = () => {
 
         <div className="provider-schedule__legend">
           <span className="provider-schedule__legend-item provider-schedule__legend-item--available">ว่างรับงาน</span>
+          <span className="provider-schedule__legend-item" style={{ background: '#fffbeb', color: '#d97706', border: '1px solid #fde68a', borderRadius: 999, padding: '2px 12px', fontSize: 12, fontWeight: 600 }}>มีงานในคิว</span>
           <span className="provider-schedule__legend-item provider-schedule__legend-item--booked">ไม่สะดวกรับงาน</span>
         </div>
 
@@ -251,17 +293,28 @@ const SchedulePage = () => {
 
           const day = cell.day;
           const isUnavailable = unavailableMap.has(day);
+          const isBooked = bookedMap.has(day);
           const isToday =
             day === todayDate.getDate()
             && currentMonthIndex === todayDate.getMonth()
             && currentYear === todayDate.getFullYear();
 
+          let dayClass = 'available';
+          if (isBooked) dayClass = 'has-job';
+          if (isUnavailable) dayClass = 'booked';
+
           return (
             <div
               key={day}
-              className={`schedule-day ${isUnavailable ? 'booked' : 'available'} ${isToday && !isUnavailable ? 'today' : ''}`}
+              className={`schedule-day ${dayClass} ${isToday && dayClass === 'available' ? 'today' : ''}`}
+              style={isBooked && !isUnavailable ? { background: '#fffbeb', borderColor: '#fde68a' } : {}}
             >
-              <span className="provider-schedule__day-number">{day}</span>
+              <span className="provider-schedule__day-number" style={isBooked && !isUnavailable ? { color: '#d97706' } : {}}>
+                {day}
+              </span>
+              {isBooked && !isUnavailable && bookedMap.get(day).map((name, i) => (
+                <p key={i} className="provider-schedule__day-note" style={{ color: '#d97706' }}>📋 {name}</p>
+              ))}
               {isUnavailable && (
                 <p className="provider-schedule__day-note">● {unavailableMap.get(day)}</p>
               )}
