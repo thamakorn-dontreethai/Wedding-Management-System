@@ -140,20 +140,35 @@ exports.getMyOrders = async (req, res) => {
 exports.updateOrderStatus = async (req, res) => {
     try {
         const provider = await Provider.findById(req.user.id).select("serviceType");
-        const { status } = req.body;
-        const allowed = ["acknowledged", "ready"];
+        const { status, rejectionNote } = req.body;
+        const allowed = ["acknowledged", "ready", "rejected"];
         if (!allowed.includes(status)) return res.status(400).json({ message: "Invalid status" });
 
         const field = `orderStatuses.${provider.serviceType}`;
+        const update = { [field]: status };
+        if (status === "rejected" && rejectionNote !== undefined) {
+            update[`providerRejectionNotes.${provider.serviceType}`] = rejectionNote;
+        }
+
         const booking = await Booking.findByIdAndUpdate(
             req.params.bookingId,
-            { [field]: status },
+            update,
             { new: true }
         );
         if (!booking) return res.status(404).json({ message: "Booking not found" });
         res.json(booking);
     } catch (err) {
         res.status(400).json({ message: err.message });
+    }
+};
+
+// GET /api/providers/all  (admin only)
+exports.getAllProvidersForAdmin = async (req, res) => {
+    try {
+        const providers = await Provider.find({}).sort({ createdAt: -1 });
+        res.json(providers);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
     }
 };
 

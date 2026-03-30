@@ -25,9 +25,14 @@ const bookingSchema = new mongoose.Schema({
     notes: { type: String },
     rejectionNote: { type: String, default: null },
     orderStatuses: {
-        food:  { type: String, enum: ["pending", "acknowledged", "ready"], default: "pending" },
-        music: { type: String, enum: ["pending", "acknowledged", "ready"], default: "pending" },
-        photo: { type: String, enum: ["pending", "acknowledged", "ready"], default: "pending" },
+        food:  { type: String, enum: ["pending", "acknowledged", "ready", "rejected"], default: "pending" },
+        music: { type: String, enum: ["pending", "acknowledged", "ready", "rejected"], default: "pending" },
+        photo: { type: String, enum: ["pending", "acknowledged", "ready", "rejected"], default: "pending" },
+    },
+    providerRejectionNotes: {
+        food:  { type: String, default: null },
+        music: { type: String, default: null },
+        photo: { type: String, default: null },
     },
 }, { timestamps: true });
 

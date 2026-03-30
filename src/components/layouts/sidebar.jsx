@@ -20,7 +20,6 @@ const Sidebar = () => {
       { name: '📅 การจองของฉัน', path: '/my-bookings' },
     ],
     admin: [
-      { name: '📊 Dashboard', path: '/admin/dashboard' },
       { name: '📈 รายงานระบบ', path: '/admin/report' },
       { name: '📦 จัดการแพ็กเกจ', path: '/admin/packages' },
       { name: '✅ ตรวจสอบยอดเงิน', path: '/admin/verify-payment' },

@@ -21,7 +21,7 @@ const LoginPage = () => {
         email: email.trim(), password: password.trim(), role,
       });
       setAuth(data.user, data.token, role);
-      if (role === 'admin') navigate('/admin/dashboard');
+      if (role === 'admin') navigate('/admin/report');
       else if (role === 'customer') navigate('/search');
       else if (role === 'provider') navigate('/orders');
       else navigate('/');
