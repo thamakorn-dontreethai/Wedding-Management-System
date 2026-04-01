@@ -3,7 +3,7 @@ const dotenv = require("dotenv");
 const path = require("path");
 const cors = require("cors");
 
-// ✅ โหลด .env ก่อนทุกอย่าง
+
 dotenv.config({ path: path.join(__dirname, "../.env") });
 
 const connectDB = require("./config/db");

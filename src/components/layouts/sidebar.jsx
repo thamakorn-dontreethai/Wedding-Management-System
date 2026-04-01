@@ -9,27 +9,27 @@ const Sidebar = () => {
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
-  const displayName = user?.username || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'ผู้ใช้งาน';
+  const displayName = user?.username || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'User';
   const avatarText = displayName.trim().charAt(0).toUpperCase() || 'U';
 
   const menus = {
     customer: [
-      { name: '👤 ข้อมูลของฉัน', path: '/profile' },
-      { name: '📦 แพ็กเกจงานแต่ง', path: '/customer/packages' },
-      { name: '🔍 ค้นหาสถานที่', path: '/search' },
-      { name: '📅 การจองของฉัน', path: '/my-bookings' },
+      { name: '👤 My Profile', path: '/profile' },
+      { name: '📦 Wedding Packages', path: '/customer/packages' },
+      { name: '🔍 Search Venues', path: '/search' },
+      { name: '📅 My Bookings', path: '/my-bookings' },
     ],
     admin: [
-      { name: '📈 รายงานระบบ', path: '/admin/report' },
-      { name: '📦 จัดการแพ็กเกจ', path: '/admin/packages' },
-      { name: '✅ ตรวจสอบยอดเงิน', path: '/admin/verify-payment' },
-      { name: '🧾 รายการใบเสร็จ', path: '/admin/receipts' },
+      { name: '📈 Reports', path: '/admin/report' },
+      { name: '📦 Manage Packages', path: '/admin/packages' },
+      { name: '✅ Verify Payments', path: '/admin/verify-payment' },
+      { name: '🧾 Receipts', path: '/admin/receipts' },
     ],
     provider: [
-      { name: '👤 ข้อมูลของฉัน', path: '/provider/profile' },
-      { name: '📋 รายการสั่งงาน', path: '/orders' },
-      { name: '🗓️ ตารางคิวงาน', path: '/schedule' },
-      { name: '📊 รายงาน', path: '/provider/report' },
+      { name: '👤 My Profile', path: '/provider/profile' },
+      { name: '📋 Work Orders', path: '/orders' },
+      { name: '🗓️ Schedule', path: '/schedule' },
+      { name: '📊 Report', path: '/provider/report' },
     ],
   };
 
@@ -75,7 +75,7 @@ const Sidebar = () => {
           </div>
         </div>
         <button className="sidebar__logout" onClick={handleLogout}>
-          🚪 ออกจากระบบ
+          🚪 Logout
         </button>
       </div>
     </aside>

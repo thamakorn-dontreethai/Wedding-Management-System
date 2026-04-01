@@ -26,7 +26,7 @@ const LoginPage = () => {
       else if (role === 'provider') navigate('/orders');
       else navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+      setError(err.response?.data?.message || 'Invalid email or password');
     } finally {
       setLoading(false);
     }
@@ -44,7 +44,7 @@ const LoginPage = () => {
         <div className="auth-header">
           <div className="auth-icon">💍</div>
           <h1>Wedding Planner</h1>
-          <p>เข้าสู่ระบบเพื่อจัดการงานแต่งงานของคุณ</p>
+          <p>Sign in to manage your wedding</p>
         </div>
 
         <div className="auth-body">
@@ -60,7 +60,7 @@ const LoginPage = () => {
             </div>
 
             <div className="input-group">
-              <label className="input-label">อีเมล</label>
+              <label className="input-label">Email</label>
               <div className="input-wrapper">
                 <span className="input-icon">✉️</span>
                 <input className="auth-input" type="email" placeholder="example@ku.th"
@@ -69,7 +69,7 @@ const LoginPage = () => {
             </div>
 
             <div className="input-group">
-              <label className="input-label">รหัสผ่าน</label>
+              <label className="input-label">Password</label>
               <div className="input-wrapper">
                 <span className="input-icon">🔒</span>
                 <input className="auth-input" type="password" placeholder="••••••••"
@@ -80,14 +80,14 @@ const LoginPage = () => {
             {error && <div className="auth-error">⚠️ {error}</div>}
 
             <button className="auth-btn auth-btn-primary" type="submit" disabled={loading}>
-              {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
-          <div className="auth-divider">หรือ</div>
+          <div className="auth-divider">or</div>
 
           <button className="auth-btn auth-btn-secondary" onClick={() => navigate('/register')}>
-            สมัครสมาชิกใหม่
+            Create an Account
           </button>
         </div>
       </div>

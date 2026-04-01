@@ -56,7 +56,7 @@ const AdminReportPage = () => {
 
     const dailyMap = {};
     filteredBookings.forEach((booking) => {
-      const key = new Date(booking.createdAt).toLocaleDateString('th-TH');
+      const key = new Date(booking.createdAt).toLocaleDateString('en-US');
       if (!dailyMap[key]) {
         dailyMap[key] = { dateLabel: key, bookings: 0, revenue: 0 };
       }
@@ -64,18 +64,16 @@ const AdminReportPage = () => {
     });
 
     approvedPayments.forEach((payment) => {
-      const key = new Date(payment.transferDate || payment.createdAt).toLocaleDateString('th-TH');
+      const key = new Date(payment.transferDate || payment.createdAt).toLocaleDateString('en-US');
       if (!dailyMap[key]) {
         dailyMap[key] = { dateLabel: key, bookings: 0, revenue: 0 };
       }
       dailyMap[key].revenue += Number(payment.amount) || 0;
     });
 
-    const dailyRows = Object.values(dailyMap).sort((a, b) => {
-      const [da, ma, ya] = a.dateLabel.split('/').map(Number);
-      const [db, mb, yb] = b.dateLabel.split('/').map(Number);
-      return new Date(ya - 543, ma - 1, da) - new Date(yb - 543, mb - 1, db);
-    });
+    const dailyRows = Object.values(dailyMap).sort((a, b) =>
+      new Date(a.dateLabel) - new Date(b.dateLabel)
+    );
 
     return {
       filteredPayments,
@@ -90,15 +88,15 @@ const AdminReportPage = () => {
   return (
     <div>
       <div className="page-header">
-        <h1 className="page-header__title">📈 รายงานผู้ดูแลระบบ</h1>
-        <p className="page-header__sub">สรุปรายได้และการจองตามช่วงวันที่ที่ต้องการ</p>
+        <h1 className="page-header__title">📈 Admin Report</h1>
+        <p className="page-header__sub">Revenue and booking summary by date range</p>
       </div>
 
       <div className="chart-card" style={{ marginBottom: 20 }}>
-        <h2 className="chart-card__title" style={{ marginBottom: 12 }}>ช่วงวันที่รายงาน</h2>
+        <h2 className="chart-card__title" style={{ marginBottom: 12 }}>Date Range</h2>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div>
-            <label className="form-label">วันที่เริ่มต้น</label>
+            <label className="form-label">Start Date</label>
             <input
               type="date"
               className="form-input"
@@ -107,7 +105,7 @@ const AdminReportPage = () => {
             />
           </div>
           <div>
-            <label className="form-label">วันที่สิ้นสุด</label>
+            <label className="form-label">End Date</label>
             <input
               type="date"
               className="form-input"
@@ -124,10 +122,10 @@ const AdminReportPage = () => {
         <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
             {[
-              { label: 'รายได้ที่อนุมัติ', value: `฿${report.revenue.toLocaleString()}`, color: '#16a34a', bg: '#f0fdf4' },
-              { label: 'จำนวนการจอง', value: `${report.filteredBookings.length} งาน`, color: 'var(--pink)', bg: 'var(--pink-bg)' },
-              { label: 'ชำระแล้ว', value: `${report.approvedPayments.length} รายการ`, color: '#2563eb', bg: '#eff6ff' },
-              { label: 'รอตรวจสอบ', value: `${report.pendingPayments.length} รายการ`, color: '#d97706', bg: '#fffbeb' },
+              { label: 'Approved Revenue', value: `฿${report.revenue.toLocaleString()}`, color: '#16a34a', bg: '#f0fdf4' },
+              { label: 'Total Bookings', value: `${report.filteredBookings.length} events`, color: 'var(--pink)', bg: 'var(--pink-bg)' },
+              { label: 'Approved Payments', value: `${report.approvedPayments.length} items`, color: '#2563eb', bg: '#eff6ff' },
+              { label: 'Pending Verification', value: `${report.pendingPayments.length} items`, color: '#d97706', bg: '#fffbeb' },
             ].map((item) => (
               <div key={item.label} style={{ borderRadius: 14, padding: '14px 16px', background: item.bg }}>
                 <div style={{ fontSize: 24, fontWeight: 800, color: item.color }}>{item.value}</div>
@@ -137,11 +135,11 @@ const AdminReportPage = () => {
           </div>
 
           <div className="chart-card">
-            <h2 className="chart-card__title" style={{ marginBottom: 12 }}>สรุปรายวัน (รายได้ + การจอง)</h2>
+            <h2 className="chart-card__title" style={{ marginBottom: 12 }}>Daily Summary (Revenue + Bookings)</h2>
             {report.dailyRows.length === 0 ? (
               <div className="empty-state">
                 <div className="empty-state__icon">📊</div>
-                <p className="empty-state__title">ไม่พบข้อมูลในช่วงวันที่ที่เลือก</p>
+                <p className="empty-state__title">No data found for the selected date range</p>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -159,9 +157,9 @@ const AdminReportPage = () => {
                     }}
                   >
                     <div style={{ fontWeight: 700 }}>{row.dateLabel}</div>
-                    <div style={{ color: 'var(--gray-600)' }}>การจอง: {row.bookings} งาน</div>
+                    <div style={{ color: 'var(--gray-600)' }}>Bookings: {row.bookings}</div>
                     <div style={{ color: '#16a34a', fontWeight: 700, textAlign: 'right' }}>
-                      รายได้: ฿{row.revenue.toLocaleString()}
+                      Revenue: ฿{row.revenue.toLocaleString()}
                     </div>
                   </div>
                 ))}

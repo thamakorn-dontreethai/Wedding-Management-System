@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 
-const BANK_OPTIONS = ['กสิกรไทย', 'กรุงเทพ', 'ไทยพาณิชย์', 'กรุงไทย', 'ทหารไทยธนชาต', 'ออมสิน'];
+const BANK_OPTIONS = ['Kasikorn Bank', 'Bangkok Bank', 'SCB', 'Krungthai Bank', 'TTB', 'GSB'];
 
 const ProviderProfilePage = () => {
   const [profile, setProfile] = useState(null);
@@ -25,7 +25,7 @@ const ProviderProfilePage = () => {
       });
       setMaxGuests(String(data.maxGuests || ''));
       setSupportsMealType(data.supportsMealType || 'both');
-    }).catch(() => setMsg({ text: 'โหลดข้อมูลไม่สำเร็จ', type: 'error' }));
+    }).catch(() => setMsg({ text: 'Failed to load profile', type: 'error' }));
   }, []);
 
   const handleSaveProfile = async (e) => {
@@ -34,9 +34,9 @@ const ProviderProfilePage = () => {
     setMsg({ text: '', type: '' });
     try {
       await api.put('/providers/me/profile', form);
-      setMsg({ text: 'บันทึกข้อมูลสำเร็จ', type: 'success' });
+      setMsg({ text: 'Profile saved successfully', type: 'success' });
     } catch (err) {
-      setMsg({ text: err.response?.data?.message || 'บันทึกไม่สำเร็จ', type: 'error' });
+      setMsg({ text: err.response?.data?.message || 'Failed to save', type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -48,9 +48,9 @@ const ProviderProfilePage = () => {
     setMsgCondition({ text: '', type: '' });
     try {
       await api.put('/providers/me/availability', { maxGuests: Number(maxGuests), supportsMealType });
-      setMsgCondition({ text: 'บันทึกเงื่อนไขสำเร็จ', type: 'success' });
+      setMsgCondition({ text: 'Conditions saved successfully', type: 'success' });
     } catch (err) {
-      setMsgCondition({ text: err.response?.data?.message || 'บันทึกไม่สำเร็จ', type: 'error' });
+      setMsgCondition({ text: err.response?.data?.message || 'Failed to save', type: 'error' });
     } finally {
       setSavingCondition(false);
     }
@@ -59,20 +59,19 @@ const ProviderProfilePage = () => {
   if (!profile) return (
     <div className="loading-state">
       <div className="loading-dots"><span /><span /><span /></div>
-      <p style={{ color: 'var(--gray-400)', marginTop: 16 }}>กำลังโหลด...</p>
+      <p style={{ color: 'var(--gray-400)', marginTop: 16 }}>Loading...</p>
     </div>
   );
 
-  const serviceLabel = { food: '🍽️ ครัว / อาหาร', music: '🎵 วงดนตรี', photo: '📷 ช่างภาพ' }[profile.serviceType] || profile.serviceType;
+  const serviceLabel = { food: '🍽️ Catering', music: '🎵 Music Band', photo: '📷 Photographer' }[profile.serviceType] || profile.serviceType;
 
   return (
     <div style={{ maxWidth: 600, margin: '0 auto' }}>
       <div className="page-header">
-        <h1 className="page-header__title">👤 ข้อมูลของฉัน</h1>
-        <p className="page-header__sub">จัดการข้อมูลส่วนตัวและบัญชีธนาคาร</p>
+        <h1 className="page-header__title">👤 My Profile</h1>
+        <p className="page-header__sub">Manage your personal information and bank account</p>
       </div>
 
-      {/* Service badge */}
       <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 10 }}>
         <span style={{ padding: '6px 16px', borderRadius: 999, background: '#fdf2f8', color: 'var(--pink)', fontWeight: 700, fontSize: 14 }}>
           {serviceLabel}
@@ -80,38 +79,37 @@ const ProviderProfilePage = () => {
         <span style={{ fontSize: 13, color: 'var(--gray-400)' }}>{profile.email}</span>
       </div>
 
-      {/* Profile & Bank form */}
       <form onSubmit={handleSaveProfile} style={{ background: 'white', borderRadius: 20, border: '1px solid var(--gray-100)', padding: 24, marginBottom: 20, boxShadow: '0 2px 12px rgba(249,168,201,0.08)' }}>
-        <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 20, color: 'var(--gray-900)' }}>📝 ข้อมูลส่วนตัว</h2>
+        <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 20, color: 'var(--gray-900)' }}>📝 Personal Information</h2>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
           <div>
-            <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 6 }}>ชื่อ</label>
+            <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 6 }}>First Name</label>
             <input className="payment-input" value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} required />
           </div>
           <div>
-            <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 6 }}>นามสกุล</label>
+            <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 6 }}>Last Name</label>
             <input className="payment-input" value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} required />
           </div>
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 6 }}>เบอร์โทรศัพท์</label>
+          <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 6 }}>Phone Number</label>
           <input className="payment-input" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="0xx-xxx-xxxx" />
         </div>
 
-        <h2 style={{ fontSize: 16, fontWeight: 700, margin: '20px 0 16px', color: 'var(--gray-900)' }}>🏦 บัญชีธนาคาร</h2>
+        <h2 style={{ fontSize: 16, fontWeight: 700, margin: '20px 0 16px', color: 'var(--gray-900)' }}>🏦 Bank Account</h2>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 6 }}>ธนาคาร</label>
+          <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 6 }}>Bank</label>
           <select className="payment-input" value={form.bankName} onChange={e => setForm(f => ({ ...f, bankName: e.target.value }))}>
-            <option value="">-- เลือกธนาคาร --</option>
+            <option value="">-- Select Bank --</option>
             {BANK_OPTIONS.map(b => <option key={b} value={b}>{b}</option>)}
           </select>
         </div>
 
         <div style={{ marginBottom: 20 }}>
-          <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 6 }}>เลขบัญชี</label>
+          <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 6 }}>Account Number</label>
           <input className="payment-input" value={form.bankAccount} onChange={e => setForm(f => ({ ...f, bankAccount: e.target.value }))} placeholder="xxx-x-xxxxx-x" />
         </div>
 
@@ -125,29 +123,28 @@ const ProviderProfilePage = () => {
         )}
 
         <button type="submit" className="payment-submit-btn" disabled={saving}>
-          {saving ? '⏳ กำลังบันทึก...' : '💾 บันทึกข้อมูล'}
+          {saving ? '⏳ Saving...' : '💾 Save Profile'}
         </button>
       </form>
 
-      {/* Conditions form */}
       <form onSubmit={handleSaveCondition} style={{ background: 'white', borderRadius: 20, border: '1px solid var(--gray-100)', padding: 24, boxShadow: '0 2px 12px rgba(249,168,201,0.08)' }}>
-        <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, color: 'var(--gray-900)' }}>⚙️ เงื่อนไขการรับงาน</h2>
-        <p style={{ fontSize: 13, color: 'var(--gray-400)', marginBottom: 16 }}>จำนวนแขกสูงสุดที่รองรับได้ต่องาน (0 = ไม่จำกัด)</p>
+        <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, color: 'var(--gray-900)' }}>⚙️ Work Conditions</h2>
+        <p style={{ fontSize: 13, color: 'var(--gray-400)', marginBottom: 16 }}>Maximum guests you can handle per event (0 = unlimited)</p>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 6 }}>จำนวนแขกสูงสุด (คน)</label>
+          <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 6 }}>Max Guests</label>
           <input className="payment-input" type="number" min="0" value={maxGuests}
-            onChange={e => setMaxGuests(e.target.value)} placeholder="เช่น 500" />
+            onChange={e => setMaxGuests(e.target.value)} placeholder="e.g. 500" />
         </div>
 
         {profile.serviceType === 'food' && (
           <div style={{ marginBottom: 20 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 10 }}>รูปแบบอาหารที่รองรับ</label>
+            <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 10 }}>Supported Meal Type</label>
             <div style={{ display: 'flex', gap: 10 }}>
               {[
-                { value: 'buffet', label: '🍽️ บุฟเฟต์' },
-                { value: 'chinese', label: '🥢 โต๊ะจีน' },
-                { value: 'both', label: '✅ ทั้งสองรูปแบบ' },
+                { value: 'buffet', label: '🍽️ Buffet' },
+                { value: 'chinese', label: '🥢 Chinese Banquet' },
+                { value: 'both', label: '✅ Both' },
               ].map(opt => (
                 <div key={opt.value} onClick={() => setSupportsMealType(opt.value)}
                   style={{ flex: 1, padding: '10px 8px', borderRadius: 12, cursor: 'pointer', textAlign: 'center',
@@ -172,7 +169,7 @@ const ProviderProfilePage = () => {
         )}
 
         <button type="submit" className="payment-submit-btn" disabled={savingCondition}>
-          {savingCondition ? '⏳ กำลังบันทึก...' : '💾 บันทึกเงื่อนไข'}
+          {savingCondition ? '⏳ Saving...' : '💾 Save Conditions'}
         </button>
       </form>
     </div>

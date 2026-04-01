@@ -3,7 +3,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import api from '../../services/api';
 
-const formatDate = (value) => new Date(value).toLocaleDateString('th-TH');
+const formatDate = (value) => new Date(value).toLocaleDateString('en-US');
 
 const toSafeFilename = (value) => String(value || 'receipt').replace(/[^a-zA-Z0-9-_]/g, '_');
 
@@ -62,6 +62,11 @@ const ReceiptsPage = () => {
     doc.save(filename);
   };
 
+  const toDateFilename = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  };
+
   const downloadAllReceiptsPdf = () => {
     const doc = new jsPDF({ orientation: 'landscape' });
 
@@ -91,34 +96,23 @@ const ReceiptsPage = () => {
     doc.save(`receipts-report-${toDateFilename()}.pdf`);
   };
 
-  const toDateFilename = () => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  };
-
   return (
     <div>
       <div className="page-header">
-        <h1 className="page-header__title">🧾 รายการใบเสร็จ</h1>
-        <p className="page-header__sub">แสดงใบเสร็จที่ออกแล้วทั้งหมดในระบบ</p>
+        <h1 className="page-header__title">🧾 Receipts</h1>
+        <p className="page-header__sub">All issued receipts in the system</p>
         <div style={{ marginTop: 12 }}>
           <button
             type="button"
             onClick={downloadAllReceiptsPdf}
             disabled={loading || receipts.length === 0}
             style={{
-              border: 'none',
-              borderRadius: 10,
-              padding: '10px 14px',
-              fontWeight: 700,
-              color: 'white',
+              border: 'none', borderRadius: 10, padding: '10px 14px', fontWeight: 700, color: 'white',
               cursor: loading || receipts.length === 0 ? 'not-allowed' : 'pointer',
-              background: loading || receipts.length === 0
-                ? 'var(--gray-300)'
-                : 'linear-gradient(135deg, #4f46e5, #2563eb)',
+              background: loading || receipts.length === 0 ? 'var(--gray-300)' : 'linear-gradient(135deg, #4f46e5, #2563eb)',
             }}
           >
-            ⬇️ ดาวน์โหลด PDF ทั้งหมด
+            ⬇️ Download All PDF
           </button>
         </div>
       </div>
@@ -126,17 +120,17 @@ const ReceiptsPage = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
         <div style={{ padding: '16px 20px', borderRadius: 14, background: 'var(--gray-50)' }}>
           <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--gray-900)' }}>{receipts.length}</div>
-          <div style={{ fontSize: 12, color: 'var(--gray-500)', marginTop: 4 }}>จำนวนใบเสร็จทั้งหมด</div>
+          <div style={{ fontSize: 12, color: 'var(--gray-500)', marginTop: 4 }}>Total Receipts</div>
         </div>
         <div style={{ padding: '16px 20px', borderRadius: 14, background: '#f0fdf4' }}>
           <div style={{ fontSize: 26, fontWeight: 800, color: '#16a34a' }}>฿{totalAmount.toLocaleString()}</div>
-          <div style={{ fontSize: 12, color: 'var(--gray-500)', marginTop: 4 }}>ยอดเงินรวมในใบเสร็จ</div>
+          <div style={{ fontSize: 12, color: 'var(--gray-500)', marginTop: 4 }}>Total Amount</div>
         </div>
         <div style={{ padding: '16px 20px', borderRadius: 14, background: 'var(--pink-bg)' }}>
           <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--pink)' }}>
             {receipts.filter((r) => r.installment === 2).length}
           </div>
-          <div style={{ fontSize: 12, color: 'var(--gray-500)', marginTop: 4 }}>ใบเสร็จงวดที่ 2</div>
+          <div style={{ fontSize: 12, color: 'var(--gray-500)', marginTop: 4 }}>Installment 2 Receipts</div>
         </div>
       </div>
 
@@ -145,57 +139,33 @@ const ReceiptsPage = () => {
       ) : receipts.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state__icon">🧾</div>
-          <p className="empty-state__title">ยังไม่มีรายการใบเสร็จ</p>
+          <p className="empty-state__title">No receipts yet</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {receipts.map((receipt) => (
-            <div
-              key={receipt._id}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1.2fr 1fr 0.8fr 1fr 1fr auto',
-                gap: 12,
-                background: 'white',
-                border: '1px solid var(--gray-100)',
-                borderRadius: 14,
-                padding: '14px 16px',
-                alignItems: 'center',
-              }}
-            >
+            <div key={receipt._id} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 0.8fr 1fr 1fr auto', gap: 12, background: 'white', border: '1px solid var(--gray-100)', borderRadius: 14, padding: '14px 16px', alignItems: 'center' }}>
               <div>
                 <div style={{ fontWeight: 800, color: 'var(--gray-900)' }}>{receipt.receiptNo}</div>
                 <div style={{ fontSize: 12, color: 'var(--gray-500)', marginTop: 2 }}>
-                  {receipt.customerId?.username || receipt.customerId?.email || 'ลูกค้า'}
+                  {receipt.customerId?.username || receipt.customerId?.email || 'Customer'}
                 </div>
               </div>
               <div style={{ fontSize: 13, color: 'var(--gray-700)' }}>
                 {receipt.bookingId?.venueName || '-'}
               </div>
               <div style={{ fontSize: 13, color: 'var(--gray-700)' }}>
-                งวด {receipt.installment}
+                Installment {receipt.installment}
               </div>
               <div style={{ fontWeight: 700, color: '#16a34a', textAlign: 'right' }}>
                 ฿{(receipt.amount || 0).toLocaleString()}
               </div>
               <div style={{ fontSize: 12, color: 'var(--gray-500)', textAlign: 'right' }}>
-                {new Date(receipt.issuedAt || receipt.createdAt).toLocaleDateString('th-TH')}
+                {new Date(receipt.issuedAt || receipt.createdAt).toLocaleDateString('en-US')}
               </div>
               <div style={{ textAlign: 'right' }}>
-                <button
-                  type="button"
-                  onClick={() => downloadReceiptPdf(receipt)}
-                  style={{
-                    border: '1px solid #93c5fd',
-                    borderRadius: 8,
-                    background: '#eff6ff',
-                    color: '#1d4ed8',
-                    fontSize: 12,
-                    fontWeight: 700,
-                    padding: '6px 10px',
-                    cursor: 'pointer',
-                  }}
-                >
+                <button type="button" onClick={() => downloadReceiptPdf(receipt)}
+                  style={{ border: '1px solid #93c5fd', borderRadius: 8, background: '#eff6ff', color: '#1d4ed8', fontSize: 12, fontWeight: 700, padding: '6px 10px', cursor: 'pointer' }}>
                   PDF
                 </button>
               </div>

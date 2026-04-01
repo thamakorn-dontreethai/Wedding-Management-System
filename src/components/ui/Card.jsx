@@ -10,7 +10,7 @@ const Card = ({ title, children, footer, price, capacity }) => (
       {(price || capacity) && (
         <div className="space-y-2">
           {price && <div className="text-2xl font-bold text-rose-600">{price}</div>}
-          {capacity && <div className="text-sm text-slate-500">รับแขก: {capacity}</div>}
+          {capacity && <div className="text-sm text-slate-500">Capacity: {capacity}</div>}
         </div>
       )}
     </div>

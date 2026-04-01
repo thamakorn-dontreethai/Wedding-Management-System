@@ -6,78 +6,78 @@ const MOCK_VENUES = [
   {
     _id: 'mock-venue-001',
     name: 'Grand Blossom Hall',
-    description: 'ห้องจัดเลี้ยงสไตล์หรู พร้อมเวที แสง สี เสียงครบ เหมาะกับงานแต่งขนาดใหญ่',
+    description: 'Luxury banquet hall with stage, full lighting and sound system, ideal for large weddings',
     guestCount: 350,
-    province: 'ชลบุรี',
+    province: 'Chonburi',
     pricePerSession: 180000,
     images: ['https://picsum.photos/seed/wedding-grand-ballroom/1200/800'],
   },
   {
     _id: 'mock-venue-002',
     name: 'Garden Romance Venue',
-    description: 'สถานที่จัดงานกลางสวน บรรยากาศอบอุ่น เหมาะกับพิธีช่วงเย็นและงานเลี้ยงเล็กถึงกลาง',
+    description: 'Outdoor garden venue with a warm atmosphere, perfect for evening ceremonies and small-to-medium receptions',
     guestCount: 180,
-    province: 'กรุงเทพมหานคร',
+    province: 'Bangkok',
     pricePerSession: 95000,
     images: ['https://picsum.photos/seed/wedding-garden-venue/1200/800'],
   },
   {
     _id: 'mock-venue-003',
     name: 'Sea Breeze Wedding Space',
-    description: 'โลเคชันริมทะเล วิวพระอาทิตย์ตก เหมาะกับงานแต่งแนวโมเดิร์นและงาน after party',
+    description: 'Beachfront location with sunset views, perfect for modern weddings and after-parties',
     guestCount: 250,
-    province: 'ระยอง',
+    province: 'Rayong',
     pricePerSession: 140000,
     images: ['https://picsum.photos/seed/wedding-seaside-venue/1200/800'],
   },
   {
     _id: 'mock-venue-004',
     name: 'Classic Ivory Ballroom',
-    description: 'บอลรูมโทนคลาสสิกเพดานสูง รองรับทีมช่างภาพและงานพิธีการเต็มรูปแบบ',
+    description: 'High-ceiling classic ivory ballroom, fully equipped for photography teams and formal ceremonies',
     guestCount: 420,
-    province: 'นนทบุรี',
+    province: 'Nonthaburi',
     pricePerSession: 220000,
     images: ['https://picsum.photos/seed/wedding-classic-hall/1200/800'],
   },
 ];
 
 const MEAL_OPTIONS = [
-  { id: 'buffet', icon: '🍽️', title: 'บุฟเฟต์', desc: 'อาหารบุฟเฟต์หลากหลาย เลือกได้ตามใจ', pricePerHead: 450 },
-  { id: 'chinese', icon: '🥢', title: 'โต๊ะจีน', desc: 'อาหารจีนมงคล เสิร์ฟครบ 10 คอร์ส', pricePerHead: 600 },
+  { id: 'buffet', icon: '🍽️', title: 'Buffet', desc: 'Variety of buffet dishes, eat as you like', pricePerHead: 450 },
+  { id: 'chinese', icon: '🥢', title: 'Chinese Banquet', desc: 'Auspicious Chinese cuisine, served in 10 courses', pricePerHead: 600 },
 ];
 
 const FIXED_ADDONS = [
-  { id: 'mc', icon: '🎤', title: 'พิธีกร (MC)', desc: 'พิธีกรมืออาชีพดำเนินงานตลอดงาน', price: 8000 },
-  { id: 'flower', icon: '💐', title: 'จัดดอกไม้', desc: 'ตกแต่งสถานที่ด้วยดอกไม้สดทุกจุด', price: 20000 },
-  { id: 'cake', icon: '🎂', title: 'เค้กแต่งงาน', desc: 'เค้กแต่งงาน 5 ชั้น Custom', price: 5000 },
-  { id: 'makeup', icon: '💄', title: 'ช่างแต่งหน้า', desc: 'แต่งหน้าเจ้าสาว + เพื่อน 4 คน', price: 10000 },
-  { id: 'invite', icon: '💌', title: 'การ์ดเชิญ', desc: 'การ์ดเชิญ Premium พิมพ์ 200 ใบ', price: 3000 },
-  { id: 'dj', icon: '🎧', title: 'DJ', desc: 'DJ เปิดเพลงสลับวงดนตรีตลอดคืน', price: 6000 },
-  { id: 'screen', icon: '📽️', title: 'จอ LED + Slideshow', desc: 'จอใหญ่ฉาย Slideshow คู่บ่าวสาว', price: 8000 },
-  { id: 'photo_booth', icon: '🤳', title: 'Photo Booth', desc: 'บูธถ่ายรูปพร้อมอุปกรณ์ Props', price: 5000 },
+  { id: 'mc', icon: '🎤', title: 'MC / Emcee', desc: 'Professional emcee for the entire event', price: 8000 },
+  { id: 'flower', icon: '💐', title: 'Floral Decoration', desc: 'Fresh flower arrangements throughout the venue', price: 20000 },
+  { id: 'cake', icon: '🎂', title: 'Wedding Cake', desc: '5-tier custom wedding cake', price: 5000 },
+  { id: 'makeup', icon: '💄', title: 'Makeup Artist', desc: 'Bride + 4 bridesmaids makeup', price: 10000 },
+  { id: 'invite', icon: '💌', title: 'Invitation Cards', desc: 'Premium invitation cards, 200 prints', price: 3000 },
+  { id: 'dj', icon: '🎧', title: 'DJ', desc: 'DJ music between live performances', price: 6000 },
+  { id: 'screen', icon: '📽️', title: 'LED Screen + Slideshow', desc: 'Large screen showing couple slideshow', price: 8000 },
+  { id: 'photo_booth', icon: '🤳', title: 'Photo Booth', desc: 'Photo booth with props and accessories', price: 5000 },
 ];
 
 // Component เลือก Provider
 const SERVICE_ROLE_LABELS = {
-  food: 'บัญชีอาหาร',
-  photo: 'บัญชีช่างภาพ',
-  music: 'บัญชีวงดนตรี',
+  food: 'Catering',
+  photo: 'Photographer',
+  music: 'Music Band',
 };
 
-const MEAL_TYPE_LABEL = { buffet: '🍽️ บุฟเฟต์', chinese: '🥢 โต๊ะจีน', both: '🍽️🥢 ทั้งสองแบบ' };
+const MEAL_TYPE_LABEL = { buffet: '🍽️ Buffet', chinese: '🥢 Chinese Banquet', both: '🍽️🥢 Both' };
 
 const getIncludedServices = (pkg) => {
   const services = [];
   if (pkg?.includeFood) {
     const foodLabel = pkg?.includeFoodType === 'chinese'
-      ? 'อาหาร (โต๊ะจีน)'
+      ? 'Catering (Chinese Banquet)'
       : pkg?.includeFoodType === 'buffet'
-        ? 'อาหาร (บุฟเฟต์)'
-        : 'อาหาร (โต๊ะจีน/บุฟเฟต์)';
+        ? 'Catering (Buffet)'
+        : 'Catering (Chinese / Buffet)';
     services.push(foodLabel);
   }
-  if (pkg?.includePhoto) services.push('ช่างภาพ');
-  if (pkg?.includeMusic) services.push('วงดนตรี');
+  if (pkg?.includePhoto) services.push('Photographer');
+  if (pkg?.includeMusic) services.push('Music Band');
   return services;
 };
 
@@ -92,7 +92,7 @@ const ProviderSelector = ({ title, icon, providers, selected, onSelect, serviceT
         color: hasDate ? '#d97706' : 'var(--gray-400)', fontSize: 14, fontWeight: hasDate ? 600 : 400,
         border: hasDate ? '1px solid #fde68a' : 'none',
       }}>
-        {hasDate ? `⛔ ไม่มี${title}ที่ว่างในวันที่เลือก` : `ยังไม่มี${title}ในระบบ`}
+        {hasDate ? `⛔ No available ${title} on the selected date` : `No ${title} available in the system`}
       </div>
     ) : (
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -107,10 +107,10 @@ const ProviderSelector = ({ title, icon, providers, selected, onSelect, serviceT
           }}>
           <div style={{ fontSize: 32, marginBottom: 4 }}>🚫</div>
           <div style={{ fontWeight: 700, fontSize: 15, color: !selected ? 'var(--pink)' : 'var(--gray-900)' }}>
-            ไม่เลือก{title}
+            Skip {title}
           </div>
           <div style={{ fontSize: 12, color: 'var(--gray-400)', lineHeight: 1.4 }}>
-            ข้ามการเลือกผู้ให้บริการประเภทนี้
+            Do not add this service provider
           </div>
           <div style={{ fontWeight: 700, color: 'var(--pink)', fontSize: 14, marginTop: 2 }}>
             +฿0
@@ -153,7 +153,7 @@ const ProviderSelector = ({ title, icon, providers, selected, onSelect, serviceT
               {p.firstName} {p.lastName}
             </div>
             <div style={{ fontSize: 11, color: 'var(--pink)', marginBottom: 4, fontWeight: 700 }}>
-              🏷️ {SERVICE_ROLE_LABELS[p.serviceType] || SERVICE_ROLE_LABELS[serviceType] || 'บัญชีผู้ให้บริการ'}
+              🏷️ {SERVICE_ROLE_LABELS[p.serviceType] || SERVICE_ROLE_LABELS[serviceType] || 'Service Provider'}
             </div>
             {p.serviceType === 'food' && p.supportsMealType && (
               <div style={{ fontSize: 11, color: '#d97706', fontWeight: 700, marginBottom: 4 }}>
@@ -165,11 +165,11 @@ const ProviderSelector = ({ title, icon, providers, selected, onSelect, serviceT
             </div>
             {p.maxGuests > 0 && (
               <div style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 8, fontWeight: 600 }}>
-                👥 รับได้สูงสุด {p.maxGuests} คน
+                👥 Max {p.maxGuests} guests
               </div>
             )}
             <div style={{ fontWeight: 700, color: 'var(--pink)', fontSize: 14 }}>
-              ค่าบริการ
+              Service Fee
             </div>
             <div style={{ fontWeight: 800, color: 'var(--pink)', fontSize: 15, marginTop: 2 }}>
               +฿{(p.price || 0).toLocaleString()}
@@ -321,13 +321,13 @@ const BookingPage = () => {
   const venueGuestCount = getVenueGuestCount(venue);
 
   const handleSubmit = async () => {
-    if (!eventDate) return alert('กรุณาเลือกวันจัดงาน');
-    if (guestCount < 1) return alert('จำนวนแขกต้องมีอย่างน้อย 1 คน');
+    if (!eventDate) return alert('Please select an event date');
+    if (guestCount < 1) return alert('Guest count must be at least 1');
     if (venueGuestCount > 0 && guestCount > venueGuestCount) {
-      return alert(`จำนวนแขกเกินความจุสถานที่ (รองรับสูงสุด ${venueGuestCount} คน)`);
+      return alert(`Guest count exceeds venue capacity (max ${venueGuestCount} guests)`);
     }
     if (selectedPackage?.maxGuests > 0 && guestCount > selectedPackage.maxGuests) {
-      return alert(`แพ็กเกจที่เลือก รองรับได้สูงสุด ${selectedPackage.maxGuests} คน`);
+      return alert(`The selected package supports a maximum of ${selectedPackage.maxGuests} guests`);
     }
     setSubmitting(true);
     try {
@@ -362,10 +362,10 @@ const BookingPage = () => {
         localStorage.setItem(mapKey, JSON.stringify(currentMap));
       }
 
-      alert('จองสำเร็จ! กรุณาชำระเงินมัดจำ');
+      alert('Booking confirmed! Please proceed with the deposit payment.');
       navigate('/my-bookings');
     } catch (err) {
-      alert(err.response?.data?.message || 'เกิดข้อผิดพลาด');
+      alert(err.response?.data?.message || 'An error occurred');
     } finally {
       setSubmitting(false);
     }
@@ -374,7 +374,7 @@ const BookingPage = () => {
   if (loading) return (
     <div className="loading-state">
       <div className="loading-dots"><span /><span /><span /></div>
-      <p style={{ color: 'var(--gray-400)', marginTop: 16 }}>กำลังโหลด...</p>
+      <p style={{ color: 'var(--gray-400)', marginTop: 16 }}>Loading...</p>
     </div>
   );
 
@@ -385,48 +385,48 @@ const BookingPage = () => {
       <div className="booking-header">
         <div className="booking-header__icon">💍</div>
         <div>
-          <h1 className="booking-header__title">{venue?.name || venue?.venueName || 'สถานที่จัดงาน'}</h1>
+          <h1 className="booking-header__title">{venue?.name || venue?.venueName || 'Wedding Venue'}</h1>
           <p className="booking-header__sub">
-            📍 {venue?.province} · รองรับได้สูงสุด {venueGuestCount || '-'} ท่าน
+            📍 {venue?.province} · Up to {venueGuestCount || '-'} guests
           </p>
         </div>
       </div>
 
       <div className="form-section" style={{ background: '#fff7fb', border: '1px solid #fbcfe8' }}>
-        <h2 className="form-section__title">📦 แพ็กเกจงานแต่ง</h2>
+        <h2 className="form-section__title">📦 Wedding Package</h2>
         {selectedPackage ? (
           <div>
             <div style={{ fontWeight: 800, color: '#be185d', marginBottom: 6 }}>{selectedPackage.name}</div>
             <div style={{ fontSize: 13, color: 'var(--gray-600)' }}>
-              {selectedPackage.maxGuests > 0 ? `รองรับสูงสุด ${selectedPackage.maxGuests} คน` : 'ไม่จำกัดจำนวนแขก'}
+              {selectedPackage.maxGuests > 0 ? `Up to ${selectedPackage.maxGuests} guests` : 'Unlimited guests'}
             </div>
             <div style={{ fontSize: 13, color: 'var(--gray-600)', marginTop: 4 }}>
-              รวมบริการ: {getIncludedServices(selectedPackage).length > 0 ? getIncludedServices(selectedPackage).join(', ') : 'ไม่ระบุ'}
+              Includes: {getIncludedServices(selectedPackage).length > 0 ? getIncludedServices(selectedPackage).join(', ') : 'Not specified'}
             </div>
             <div style={{ marginTop: 6, fontWeight: 700, color: 'var(--pink)' }}>
-              ราคาแพ็กเกจ ฿{(selectedPackage.basePrice || 0).toLocaleString()}
+              Package Price ฿{(selectedPackage.basePrice || 0).toLocaleString()}
             </div>
           </div>
         ) : (
           <div style={{ fontSize: 13, color: 'var(--gray-500)' }}>
-            ยังไม่ได้เลือกแพ็กเกจ สามารถเลือกได้ที่เมนู "📦 แพ็กเกจงานแต่ง"
+            No package selected. You can choose one from "📦 Wedding Packages".
           </div>
         )}
       </div>
 
       {/* Step 1 - วันและแขก */}
       <div className="form-section">
-        <h2 className="form-section__title">📅 วันจัดงานและจำนวนแขก</h2>
+        <h2 className="form-section__title">📅 Event Date & Guest Count</h2>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           <div>
-            <label className="form-label">วันจัดงาน</label>
+            <label className="form-label">Event Date</label>
             <input type="date" className="form-input"
               value={eventDate}
               min={new Date().toISOString().split('T')[0]}
               onChange={e => setEventDate(e.target.value)} />
           </div>
           <div>
-            <label className="form-label">จำนวนแขก (คน)</label>
+            <label className="form-label">Guest Count</label>
             <input type="number" className="form-input"
               value={guestCount} min={1} max={venueGuestCount || undefined} step={1} inputMode="numeric"
               onChange={e => {
@@ -459,16 +459,16 @@ const BookingPage = () => {
 
       {selectedPackage ? (
         <div className="form-section" style={{ background: '#fffbeb', border: '1px solid #fde68a' }}>
-          <h2 className="form-section__title">🔒 การตั้งค่าที่ถูกล็อกโดยแพ็กเกจ</h2>
+          <h2 className="form-section__title">🔒 Locked by Package</h2>
           <p style={{ color: '#92400e', fontWeight: 600, fontSize: 13, margin: 0 }}>
-            เมื่อเลือกแพ็กเกจงานแต่งแล้ว จะไม่สามารถเลือกรูปแบบอาหาร ช่างภาพ วงดนตรี และบริการเสริมเพิ่มเติมได้
+            When a wedding package is selected, meal type, photographer, music band, and add-ons cannot be customized.
           </p>
         </div>
       ) : (
         <>
           {/* Step 2 - อาหาร */}
           <div className="form-section">
-            <h2 className="form-section__title">🍽️ รูปแบบอาหาร</h2>
+            <h2 className="form-section__title">🍽️ Meal Type</h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
               {/* ไม่เลือกอาหาร */}
               <div onClick={() => handleMealTypeChange(null)}
@@ -479,9 +479,9 @@ const BookingPage = () => {
                 }}>
                 <div style={{ fontSize: 32, marginBottom: 8 }}>🚫</div>
                 <div style={{ fontWeight: 700, fontSize: 15, color: mealType === null ? 'var(--pink)' : 'var(--gray-900)', marginBottom: 4 }}>
-                  ไม่เลือกอาหาร
+                  No Meal
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 8 }}>จัดเตรียมเองหรือไม่ต้องการ</div>
+                <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 8 }}>Self-catered or not required</div>
                 <div style={{ fontWeight: 700, color: 'var(--pink)', fontSize: 14 }}>+฿0</div>
               </div>
 
@@ -498,10 +498,10 @@ const BookingPage = () => {
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 8 }}>{meal.desc}</div>
                   <div style={{ fontWeight: 700, color: 'var(--pink)', fontSize: 14 }}>
-                    ฿{meal.pricePerHead.toLocaleString()} / คน
+                    ฿{meal.pricePerHead.toLocaleString()} / person
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--gray-500)', marginTop: 4, fontWeight: 600 }}>
-                    รวม {guestCount} คน = ฿{(meal.pricePerHead * guestCount).toLocaleString()}
+                    {guestCount} guests = ฿{(meal.pricePerHead * guestCount).toLocaleString()}
                   </div>
                 </div>
               ))}
@@ -511,7 +511,7 @@ const BookingPage = () => {
           {/* Step 3 - ครัว/อาหารจาก DB (แสดงเฉพาะเมื่อเลือกรูปแบบอาหาร) */}
           {mealType && (
             <ProviderSelector
-              title="ครัว / ผู้จัดอาหาร"
+              title="Catering"
               icon="🍳"
               providers={foodProviders.filter(p =>
                 !p.supportsMealType || p.supportsMealType === 'both' || p.supportsMealType === mealType
@@ -520,13 +520,13 @@ const BookingPage = () => {
               onSelect={setSelectedFood}
               serviceType="food"
               hasDate={!!eventDate}
-              mealTypeLabel={mealType === 'buffet' ? 'บุฟเฟต์' : 'โต๊ะจีน'}
+              mealTypeLabel={mealType === 'buffet' ? 'Buffet' : 'Chinese Banquet'}
             />
           )}
 
           {/* Step 4 - ช่างภาพจาก DB */}
           <ProviderSelector
-            title="ช่างภาพ"
+            title="Photographer"
             icon="📸"
             providers={photoProviders}
             selected={selectedPhoto}
@@ -537,7 +537,7 @@ const BookingPage = () => {
 
           {/* Step 5 - วงดนตรีจาก DB */}
           <ProviderSelector
-            title="วงดนตรี"
+            title="Music Band"
             icon="🎵"
             providers={musicProviders}
             selected={selectedMusic}
@@ -548,7 +548,7 @@ const BookingPage = () => {
 
           {/* Step 6 - บริการเสริม */}
           <div className="form-section">
-            <h2 className="form-section__title">✨ บริการเสริม</h2>
+            <h2 className="form-section__title">✨ Add-on Services</h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               {FIXED_ADDONS.map(service => {
                 const selected = addons.includes(service.id);
@@ -589,9 +589,9 @@ const BookingPage = () => {
 
       {/* Step 7 - หมายเหตุ */}
       <div className="form-section">
-        <h2 className="form-section__title">📝 หมายเหตุเพิ่มเติม</h2>
+        <h2 className="form-section__title">📝 Additional Notes</h2>
         <textarea className="form-input" rows={3}
-          placeholder="ความต้องการพิเศษ เช่น ธีมสีงาน, อาหารสำหรับผู้แพ้อาหาร ฯลฯ"
+          placeholder="Special requests, e.g. color theme, dietary requirements, etc."
           value={notes} onChange={e => setNotes(e.target.value)}
           style={{ resize: 'vertical' }} />
       </div>
@@ -599,20 +599,20 @@ const BookingPage = () => {
       {/* Price Summary */}
       <div className="price-summary" style={{ marginBottom: 24 }}>
         <h2 style={{ fontWeight: 800, fontSize: 16, color: 'var(--gray-900)', marginBottom: 16 }}>
-          💰 สรุปค่าใช้จ่าย
+          💰 Cost Summary
         </h2>
         <div className="price-summary__row">
-          <span>🏛️ ค่าสถานที่</span>
+          <span>🏛️ Venue</span>
           <span>฿{venuePrice.toLocaleString()}</span>
         </div>
         <div className="price-summary__row">
-          <span>📦 {selectedPackage ? `แพ็กเกจ ${selectedPackage.name}` : 'ไม่เลือกแพ็กเกจ'}</span>
+          <span>📦 {selectedPackage ? `Package: ${selectedPackage.name}` : 'No package'}</span>
           <span>฿{packagePrice.toLocaleString()}</span>
         </div>
         {!selectedPackage && (
           <>
             <div className="price-summary__row">
-              <span>🍽️ {selectedMeal ? `${selectedMeal.title} × ${guestCount} คน` : 'ไม่เลือกอาหาร'}</span>
+              <span>🍽️ {selectedMeal ? `${selectedMeal.title} × ${guestCount} guests` : 'No meal'}</span>
               <span>฿{mealPrice.toLocaleString()}</span>
             </div>
             {selectedFood && (
@@ -642,16 +642,16 @@ const BookingPage = () => {
           </>
         )}
         <div className="price-summary__total">
-          <span>ยอดรวมทั้งหมด</span>
+          <span>Total</span>
           <span>฿{totalPrice.toLocaleString()}</span>
         </div>
         <div style={{ marginTop: 12, padding: '12px 0', borderTop: '1px dashed var(--pink-border)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--gray-500)' }}>
-            <span>💳 มัดจำงวดที่ 1 (30%)</span>
+            <span>💳 Deposit Installment 1 (30%)</span>
             <span style={{ fontWeight: 700, color: 'var(--pink)' }}>฿{depositAmount.toLocaleString()}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--gray-500)', marginTop: 4 }}>
-            <span>💳 ยอดคงเหลือ (70%)</span>
+            <span>💳 Remaining Balance (70%)</span>
             <span>฿{(totalPrice - depositAmount).toLocaleString()}</span>
           </div>
         </div>
@@ -671,7 +671,7 @@ const BookingPage = () => {
           boxShadow: submitting || !eventDate ? 'none' : '0 6px 20px rgba(236,72,153,0.35)',
           transition: 'all 0.2s', marginBottom: 32,
         }}>
-        {submitting ? '⏳ กำลังจอง...' : !eventDate ? 'กรุณาเลือกวันจัดงานก่อน' : '💍 ยืนยันการจอง'}
+        {submitting ? '⏳ Booking...' : !eventDate ? 'Please select an event date first' : '💍 Confirm Booking'}
       </button>
 
     </div>

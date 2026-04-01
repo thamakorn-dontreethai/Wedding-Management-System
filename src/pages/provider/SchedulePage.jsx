@@ -10,7 +10,7 @@ const makeDateKey = (year, monthIndex, day) => `${year}-${String(monthIndex + 1)
 const SchedulePage = () => {
   const { token, user } = useAuthStore();
   const isFoodProvider = user?.serviceType === 'food';
-  const weekDays = ['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.', 'อา.'];
+  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const todayDate = new Date();
   const [currentMonth, setCurrentMonth] = useState(
     () => new Date(todayDate.getFullYear(), todayDate.getMonth(), 1)
@@ -53,7 +53,7 @@ const SchedulePage = () => {
       if (!key.startsWith(monthPrefix)) return;
       const day = d.getDate();
       if (!map.has(day)) map.set(day, []);
-      map.get(day).push(order.venueName || 'งานแต่งงาน');
+      map.get(day).push(order.venueName || 'Wedding');
     });
     return map;
   }, [orders, monthPrefix]);
@@ -67,7 +67,7 @@ const SchedulePage = () => {
   );
 
   const currentMonthLabel = useMemo(
-    () => new Intl.DateTimeFormat('th-TH', { month: 'long', year: 'numeric' }).format(currentMonth),
+    () => new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(currentMonth),
     [currentMonth]
   );
   const totalDays = daysInMonth;
@@ -106,7 +106,7 @@ const SchedulePage = () => {
           setOrders(ordersRes.data);
         }
       } catch (err) {
-        setPricingError(err.response?.data?.message || 'โหลดข้อมูลไม่สำเร็จ');
+        setPricingError(err.response?.data?.message || 'Failed to load data');
       } finally {
         setPricingLoading(false);
       }
@@ -118,7 +118,7 @@ const SchedulePage = () => {
   const handleSavePricing = async () => {
     if (!token) return;
     if (isFoodProvider) {
-      setPricingError('บัญชีครัวไม่สามารถตั้งค่าค่าแรงได้');
+      setPricingError('Catering accounts cannot set a service rate');
       return;
     }
 
@@ -135,9 +135,9 @@ const SchedulePage = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setLaborPriceInput(String(nextPrice));
-      setPricingMessage('บันทึกราคาค่าแรงสำเร็จ');
+      setPricingMessage('Service rate saved successfully');
     } catch (err) {
-      setPricingError(err.response?.data?.message || 'บันทึกราคาไม่สำเร็จ');
+      setPricingError(err.response?.data?.message || 'Failed to save rate');
     } finally {
       setPricingSaving(false);
     }
@@ -153,7 +153,7 @@ const SchedulePage = () => {
     const monthIndex = selected.getMonth();
     const day = selected.getDate();
     const dateKey = makeDateKey(year, monthIndex, day);
-    const details = note.trim() || 'ไม่สะดวกรับงาน';
+    const details = note.trim() || 'Unavailable';
 
     const next = [
       ...unavailableDates.filter((item) => item.dateKey !== dateKey),
@@ -172,9 +172,9 @@ const SchedulePage = () => {
       await api.put('/providers/me/availability', { unavailableDates: next }, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setAvailMsg('บันทึกวันที่ไม่สะดวกสำเร็จ');
+      setAvailMsg('Unavailable date saved successfully');
     } catch {
-      setAvailMsg('บันทึกไม่สำเร็จ กรุณาลองใหม่');
+      setAvailMsg('Failed to save. Please try again.');
     } finally {
       setAvailSaving(false);
     }
@@ -184,42 +184,42 @@ const SchedulePage = () => {
     <div className="provider-schedule">
       <section className="provider-orders__hero">
         <p className="provider-orders__eyebrow">Provider Schedule</p>
-        <h1 className="provider-orders__title">จัดการตารางคิวงาน</h1>
-        <p className="provider-orders__desc">เดือน {currentMonthLabel} เลือกวันไม่สะดวกรับงานและจัดคิวให้ทีมทำงานได้สะดวกขึ้น</p>
+        <h1 className="provider-orders__title">Manage Schedule</h1>
+        <p className="provider-orders__desc">{currentMonthLabel} — Mark unavailable dates and manage your work queue.</p>
 
         <div className="provider-schedule__toolbar">
           <div className="provider-schedule__stats">
             <div className="provider-orders__stat-card">
-              <p className="provider-orders__stat-label">ทั้งหมด</p>
+              <p className="provider-orders__stat-label">Total</p>
               <p className="provider-orders__stat-value">{totalDays}</p>
             </div>
             <div className="provider-orders__stat-card provider-schedule__stat-card--available">
-              <p className="provider-orders__stat-label">ว่างรับงาน</p>
+              <p className="provider-orders__stat-label">Available</p>
               <p className="provider-orders__stat-value">{availableCount}</p>
             </div>
             <div className="provider-orders__stat-card" style={{ borderTop: '3px solid #f59e0b' }}>
-              <p className="provider-orders__stat-label">มีงานในคิว</p>
+              <p className="provider-orders__stat-label">Booked</p>
               <p className="provider-orders__stat-value" style={{ color: '#f59e0b' }}>{bookedCount}</p>
             </div>
             <div className="provider-orders__stat-card provider-orders__stat-card--pending">
-              <p className="provider-orders__stat-label">ไม่สะดวก</p>
+              <p className="provider-orders__stat-label">Unavailable</p>
               <p className="provider-orders__stat-value">{unavailableCount}</p>
             </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {availMsg && (
-              <span style={{ fontSize: 12, fontWeight: 600, color: availMsg.includes('สำเร็จ') ? '#16a34a' : '#dc2626' }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: availMsg.includes('successfully') ? '#16a34a' : '#dc2626' }}>
                 {availMsg}
               </span>
             )}
-            {availSaving && <span style={{ fontSize: 12, color: 'var(--gray-400)' }}>กำลังบันทึก...</span>}
+            {availSaving && <span style={{ fontSize: 12, color: 'var(--gray-400)' }}>Saving...</span>}
             <Button
               variant="primary"
               className="provider-schedule__add-btn"
               onClick={() => setIsModalOpen(true)}
             >
-              + เพิ่มวันที่ไม่สะดวกรับงาน
+              + Add Unavailable Date
             </Button>
           </div>
         </div>
@@ -227,19 +227,19 @@ const SchedulePage = () => {
 
       {!isFoodProvider && (
         <section className="form-section" style={{ marginBottom: 20 }}>
-          <h2 className="form-section__title">💰 ตั้งค่าค่าแรงของบัญชี {user?.serviceType || 'provider'}</h2>
+          <h2 className="form-section__title">💰 Set Service Rate — {user?.serviceType || 'provider'}</h2>
           <p style={{ marginTop: -4, marginBottom: 12, color: 'var(--gray-500)', fontSize: 14 }}>
-            ราคานี้จะแสดงในหน้า Booking ตอนลูกค้าเลือกผู้ให้บริการประเภทเดียวกับบัญชีของคุณ
+            This rate will be shown on the Booking page when customers select a provider of your type.
           </p>
           <div className="provider-pricing__row">
             <div className="provider-pricing__field">
               <Input
-                label="ราคาค่าแรง (บาท)"
+                label="Service Rate (THB)"
                 type="text"
                 inputMode="numeric"
                 value={laborPriceInput}
                 onChange={(event) => setLaborPriceInput(event.target.value.replace(/\D/g, ''))}
-                placeholder="เช่น 3500"
+                placeholder="e.g. 3500"
               />
             </div>
             <Button
@@ -249,7 +249,7 @@ const SchedulePage = () => {
               className="provider-pricing__save-btn"
               disabled={pricingLoading || pricingSaving}
             >
-              {pricingSaving ? 'กำลังบันทึก...' : 'บันทึกราคา'}
+              {pricingSaving ? 'Saving...' : 'Save Rate'}
             </Button>
           </div>
           {pricingError && (
@@ -273,9 +273,9 @@ const SchedulePage = () => {
         </div>
 
         <div className="provider-schedule__legend">
-          <span className="provider-schedule__legend-item provider-schedule__legend-item--available">ว่างรับงาน</span>
-          <span className="provider-schedule__legend-item" style={{ background: '#fffbeb', color: '#d97706', border: '1px solid #fde68a', borderRadius: 999, padding: '2px 12px', fontSize: 12, fontWeight: 600 }}>มีงานในคิว</span>
-          <span className="provider-schedule__legend-item provider-schedule__legend-item--booked">ไม่สะดวกรับงาน</span>
+          <span className="provider-schedule__legend-item provider-schedule__legend-item--available">Available</span>
+          <span className="provider-schedule__legend-item" style={{ background: '#fffbeb', color: '#d97706', border: '1px solid #fde68a', borderRadius: 999, padding: '2px 12px', fontSize: 12, fontWeight: 600 }}>Booked</span>
+          <span className="provider-schedule__legend-item provider-schedule__legend-item--booked">Unavailable</span>
         </div>
 
         <div className="provider-schedule__weekday-row">
@@ -285,63 +285,62 @@ const SchedulePage = () => {
         </div>
 
         <div className="schedule-grid">
-        {/* จำลองปฏิทินแบบง่าย */}
-        {calendarCells.map((cell) => {
-          if (cell.isBlank) {
-            return <div key={cell.key} className="schedule-day schedule-day--blank" aria-hidden="true" />;
-          }
+          {calendarCells.map((cell) => {
+            if (cell.isBlank) {
+              return <div key={cell.key} className="schedule-day schedule-day--blank" aria-hidden="true" />;
+            }
 
-          const day = cell.day;
-          const isUnavailable = unavailableMap.has(day);
-          const isBooked = bookedMap.has(day);
-          const isToday =
-            day === todayDate.getDate()
-            && currentMonthIndex === todayDate.getMonth()
-            && currentYear === todayDate.getFullYear();
+            const day = cell.day;
+            const isUnavailable = unavailableMap.has(day);
+            const isBooked = bookedMap.has(day);
+            const isToday =
+              day === todayDate.getDate()
+              && currentMonthIndex === todayDate.getMonth()
+              && currentYear === todayDate.getFullYear();
 
-          let dayClass = 'available';
-          if (isBooked) dayClass = 'has-job';
-          if (isUnavailable) dayClass = 'booked';
+            let dayClass = 'available';
+            if (isBooked) dayClass = 'has-job';
+            if (isUnavailable) dayClass = 'booked';
 
-          return (
-            <div
-              key={day}
-              className={`schedule-day ${dayClass} ${isToday && dayClass === 'available' ? 'today' : ''}`}
-              style={isBooked && !isUnavailable ? { background: '#fffbeb', borderColor: '#fde68a' } : {}}
-            >
-              <span className="provider-schedule__day-number" style={isBooked && !isUnavailable ? { color: '#d97706' } : {}}>
-                {day}
-              </span>
-              {isBooked && !isUnavailable && bookedMap.get(day).map((name, i) => (
-                <p key={i} className="provider-schedule__day-note" style={{ color: '#d97706' }}>📋 {name}</p>
-              ))}
-              {isUnavailable && (
-                <p className="provider-schedule__day-note">● {unavailableMap.get(day)}</p>
-              )}
-            </div>
-          );
-        })}
+            return (
+              <div
+                key={day}
+                className={`schedule-day ${dayClass} ${isToday && dayClass === 'available' ? 'today' : ''}`}
+                style={isBooked && !isUnavailable ? { background: '#fffbeb', borderColor: '#fde68a' } : {}}
+              >
+                <span className="provider-schedule__day-number" style={isBooked && !isUnavailable ? { color: '#d97706' } : {}}>
+                  {day}
+                </span>
+                {isBooked && !isUnavailable && bookedMap.get(day).map((name, i) => (
+                  <p key={i} className="provider-schedule__day-note" style={{ color: '#d97706' }}>📋 {name}</p>
+                ))}
+                {isUnavailable && (
+                  <p className="provider-schedule__day-note">● {unavailableMap.get(day)}</p>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="เพิ่มวันที่ไม่สะดวกรับงาน"
+        title="Add Unavailable Date"
       >
         <form className="provider-schedule__form" onSubmit={handleAddUnavailableDate}>
           <Input
-            label="เลือกวันที่"
+            label="Select Date"
             type="date"
             value={date}
             onChange={(event) => setDate(event.target.value)}
             required
           />
           <Input
-            label="หมายเหตุ"
+            label="Note"
             value={note}
             onChange={(event) => setNote(event.target.value)}
-            placeholder="เช่น ติดงานแต่งงาน (Ballroom)"
+            placeholder="e.g. Attending another wedding (Ballroom)"
           />
           <div className="provider-schedule__form-actions">
             <Button
@@ -351,11 +350,11 @@ const SchedulePage = () => {
               type="button"
             >
               <span className="provider-schedule__btn-icon" aria-hidden="true">✕</span>
-              ยกเลิก
+              Cancel
             </Button>
             <Button variant="primary" className="provider-schedule__save-btn" type="submit">
               <span className="provider-schedule__btn-icon" aria-hidden="true">✓</span>
-              บันทึก
+              Save
             </Button>
           </div>
         </form>

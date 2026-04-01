@@ -8,36 +8,36 @@ const MOCK_VENUES = [
   {
     _id: 'mock-venue-001',
     name: 'Grand Blossom Hall',
-    description: 'ห้องจัดเลี้ยงสไตล์หรู พร้อมเวที แสง สี เสียงครบ เหมาะกับงานแต่งขนาดใหญ่',
+    description: 'Luxury banquet hall with stage, full lighting and sound system, ideal for large weddings',
     guestCount: 350,
-    province: 'ชลบุรี',
+    province: 'Chonburi',
     pricePerSession: 180000,
     images: ['https://picsum.photos/seed/wedding-grand-ballroom/1200/800'],
   },
   {
     _id: 'mock-venue-002',
     name: 'Garden Romance Venue',
-    description: 'สถานที่จัดงานกลางสวน บรรยากาศอบอุ่น เหมาะกับพิธีช่วงเย็นและงานเลี้ยงเล็กถึงกลาง',
+    description: 'Outdoor garden venue with a warm atmosphere, perfect for evening ceremonies and small-to-medium receptions',
     guestCount: 180,
-    province: 'กรุงเทพมหานคร',
+    province: 'Bangkok',
     pricePerSession: 95000,
     images: ['https://picsum.photos/seed/wedding-garden-venue/1200/800'],
   },
   {
     _id: 'mock-venue-003',
     name: 'Sea Breeze Wedding Space',
-    description: 'โลเคชันริมทะเล วิวพระอาทิตย์ตก เหมาะกับงานแต่งแนวโมเดิร์นและงาน after party',
+    description: 'Beachfront location with sunset views, perfect for modern weddings and after-parties',
     guestCount: 250,
-    province: 'ระยอง',
+    province: 'Rayong',
     pricePerSession: 140000,
     images: ['https://picsum.photos/seed/wedding-seaside-venue/1200/800'],
   },
   {
     _id: 'mock-venue-004',
     name: 'Classic Ivory Ballroom',
-    description: 'บอลรูมโทนคลาสสิกเพดานสูง รองรับทีมช่างภาพและงานพิธีการเต็มรูปแบบ',
+    description: 'High-ceiling classic ivory ballroom, fully equipped for photography teams and formal ceremonies',
     guestCount: 420,
-    province: 'นนทบุรี',
+    province: 'Nonthaburi',
     pricePerSession: 220000,
     images: ['https://picsum.photos/seed/wedding-classic-hall/1200/800'],
   },
@@ -65,7 +65,7 @@ const SearchPage = () => {
           setVenues(MOCK_VENUES);
         }
       } catch (err) {
-        console.error('โหลดสถานที่ไม่สำเร็จ:', err);
+        console.error('Failed to load venues:', err);
         setVenues(MOCK_VENUES);
       } finally {
         setLoading(false);
@@ -117,23 +117,23 @@ const SearchPage = () => {
         <div className="im-hero__grain" aria-hidden="true" />
         <div className="im-hero__content">
           <p className="im-hero__eyebrow">✨ Wedding Discovery</p>
-          <h1 className="im-hero__title">ค้นหาสถานที่จัดงานที่พอดีกับงบและจำนวนแขก</h1>
+          <h1 className="im-hero__title">Find the perfect venue for your budget and guest count</h1>
           <p className="im-hero__desc">
-            ระบุจำนวนแขกและงบประมาณเพื่อคัดสถานที่ที่ใช่ที่สุดสำหรับวันสำคัญของคุณ
+            Enter your guest count and budget to find the best venue for your special day.
           </p>
 
           <div className="im-hero__search">
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
-              <Input label="จำนวนแขก" type="text" inputMode="numeric"
-                value={filter.guest} placeholder="เช่น 300"
+              <Input label="Guest Count" type="text" inputMode="numeric"
+                value={filter.guest} placeholder="e.g. 300"
                 onChange={(e) => setFilter({ ...filter, guest: sanitizeIntegerInput(e.target.value) })} />
-              <Input label="งบประมาณไม่เกิน (บาท)" type="text" inputMode="numeric"
-                value={filter.budget} placeholder="เช่น 150000"
+              <Input label="Max Budget (THB)" type="text" inputMode="numeric"
+                value={filter.budget} placeholder="e.g. 150000"
                 onChange={(e) => setFilter({ ...filter, budget: sanitizeIntegerInput(e.target.value) })} />
               <div className="mb-4">
                 <label className="block text-sm font-semibold mb-1.5">&nbsp;</label>
                 <Button variant="primary" onClick={handleSearch} className="w-full h-[46px]">
-                  🔍 ค้นหา
+                  🔍 Search
                 </Button>
               </div>
             </div>
@@ -144,9 +144,9 @@ const SearchPage = () => {
       {/* Result badge */}
       {isFiltering && (
         <div className="search-result-badge">
-          พบสถานที่ <strong>{displayVenues.length} แห่ง</strong>
-          {filter.guest && ` · รับแขกอย่างน้อย ${filter.guest} ท่าน`}
-          {filter.budget && ` · ราคาไม่เกิน ฿${Number(filter.budget).toLocaleString()}`}
+          Found <strong>{displayVenues.length} venue{displayVenues.length !== 1 ? 's' : ''}</strong>
+          {filter.guest && ` · min ${filter.guest} guests`}
+          {filter.budget && ` · budget ≤ ฿${Number(filter.budget).toLocaleString()}`}
         </div>
       )}
 
@@ -156,7 +156,7 @@ const SearchPage = () => {
           <div className="loading-dots">
             <span /><span /><span />
           </div>
-          <p style={{ color: '#9ca3af', marginTop: 16 }}>กำลังโหลดสถานที่...</p>
+          <p style={{ color: '#9ca3af', marginTop: 16 }}>Loading venues...</p>
         </div>
       )}
 
@@ -185,7 +185,7 @@ const SearchPage = () => {
                       <div className="venue-card__meta">
                         <div className="venue-card__meta-item">
                           <span>👥</span>
-                          <span> รองรับได้สูงสุด {venueGuestCount || '-'} ท่าน</span>
+                          <span> Up to {venueGuestCount || '-'} guests</span>
                         </div>
                         <div className="venue-card__meta-item">
                           <span>📍</span>
@@ -208,16 +208,16 @@ const SearchPage = () => {
       {!loading && isFiltering && displayVenues.length === 0 && (
         <div className="empty-state">
           <div className="empty-state__icon">🔍</div>
-          <p className="empty-state__title">ไม่พบสถานที่ที่ตรงกับเงื่อนไข</p>
-          <p className="empty-state__desc">ลองเปลี่ยนจำนวนแขกหรืองบประมาณสูงขึ้น</p>
+          <p className="empty-state__title">No venues match your criteria</p>
+          <p className="empty-state__desc">Try increasing the guest count or budget</p>
         </div>
       )}
 
       {!loading && !isFiltering && venues.length === 0 && (
         <div className="empty-state">
           <div className="empty-state__icon">🏛️</div>
-          <p className="empty-state__title">ยังไม่มีสถานที่ในระบบ</p>
-          <p className="empty-state__desc">กรุณาติดต่อผู้ดูแลระบบเพื่อเพิ่มสถานที่</p>
+          <p className="empty-state__title">No venues available</p>
+          <p className="empty-state__desc">Please contact the admin to add venues</p>
         </div>
       )}
 

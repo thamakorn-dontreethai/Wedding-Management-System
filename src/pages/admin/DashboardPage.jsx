@@ -28,16 +28,15 @@ const DashboardPage = () => {
   return (
     <div>
       <div className="page-header">
-        <h1 className="page-header__title">ภาพรวมระบบ (Admin Dashboard)</h1>
-        <p className="page-header__sub">ติดตามยอดชำระเงินล่าสุดและข้อมูลการจองแบบเรียลไทม์</p>
+        <h1 className="page-header__title">Admin Dashboard</h1>
+        <p className="page-header__sub">Track the latest payments and booking data in real time</p>
       </div>
 
-      {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
         {[
-          { label: 'รายได้ทั้งหมด', value: `฿${stats.revenue.toLocaleString()}`, icon: '💰', color: '#16a34a' },
-          { label: 'จำนวนการจอง', value: `${stats.bookings} งาน`, icon: '📅', color: 'var(--pink)' },
-          { label: 'รอตรวจสอบยอด', value: `${stats.pending} รายการ`, icon: '⏳', color: '#d97706' },
+          { label: 'Total Revenue', value: `฿${stats.revenue.toLocaleString()}`, icon: '💰', color: '#16a34a' },
+          { label: 'Total Bookings', value: `${stats.bookings} events`, icon: '📅', color: 'var(--pink)' },
+          { label: 'Pending Verification', value: `${stats.pending} items`, icon: '⏳', color: '#d97706' },
         ].map((s, i) => (
           <div key={i} className="stat-card">
             <div className="stat-card__icon">{s.icon}</div>
@@ -49,16 +48,15 @@ const DashboardPage = () => {
         ))}
       </div>
 
-      {/* Recent Payments */}
       <div className="chart-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h2 className="chart-card__title">รายการชำระเงินล่าสุด</h2>
+          <h2 className="chart-card__title">Recent Payments</h2>
           <div style={{ display: 'flex', gap: 12 }}>
             <Link to="/admin/report" style={{ fontSize: 13, color: '#2563eb', fontWeight: 600 }}>
-              ดูรายงาน →
+              View Report →
             </Link>
             <Link to="/admin/verify-payment" style={{ fontSize: 13, color: 'var(--pink)', fontWeight: 600 }}>
-              ดูทั้งหมด →
+              View All →
             </Link>
           </div>
         </div>
@@ -67,7 +65,7 @@ const DashboardPage = () => {
         ) : payments.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state__icon">💳</div>
-            <p className="empty-state__title">ยังไม่มีการชำระเงิน</p>
+            <p className="empty-state__title">No payments yet</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -78,10 +76,10 @@ const DashboardPage = () => {
               }}>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>
-                    {p.customerId?.username || p.customerId?.firstName || 'ลูกค้า'}
+                    {p.customerId?.username || p.customerId?.firstName || 'Customer'}
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--gray-400)' }}>
-                    งวด {p.installment} · {new Date(p.createdAt).toLocaleDateString('th-TH')}
+                    Installment {p.installment} · {new Date(p.createdAt).toLocaleDateString('en-US')}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>

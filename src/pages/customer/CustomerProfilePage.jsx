@@ -18,22 +18,21 @@ const CustomerProfilePage = () => {
           address: data.address || '',
         });
       })
-      .catch(() => setMsg({ text: 'โหลดข้อมูลไม่สำเร็จ', type: 'error' }))
+      .catch(() => setMsg({ text: 'Failed to load profile', type: 'error' }))
       .finally(() => setLoading(false));
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.username.trim()) return setMsg({ text: 'กรุณากรอกชื่อผู้ใช้', type: 'error' });
+    if (!form.username.trim()) return setMsg({ text: 'Username is required', type: 'error' });
     setSaving(true);
     setMsg({ text: '', type: '' });
     try {
       const { data } = await api.put('/auth/me', form);
-      // อัปเดต authStore ด้วย
       setAuth(data, token, 'customer');
-      setMsg({ text: 'บันทึกข้อมูลสำเร็จ', type: 'success' });
+      setMsg({ text: 'Profile saved successfully', type: 'success' });
     } catch (err) {
-      setMsg({ text: err.response?.data?.message || 'บันทึกไม่สำเร็จ', type: 'error' });
+      setMsg({ text: err.response?.data?.message || 'Failed to save', type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -42,48 +41,44 @@ const CustomerProfilePage = () => {
   if (loading) return (
     <div className="loading-state">
       <div className="loading-dots"><span /><span /><span /></div>
-      <p style={{ color: 'var(--gray-400)', marginTop: 16 }}>กำลังโหลด...</p>
+      <p style={{ color: 'var(--gray-400)', marginTop: 16 }}>Loading...</p>
     </div>
   );
 
   return (
     <div style={{ maxWidth: 520, margin: '0 auto' }}>
       <div className="page-header">
-        <h1 className="page-header__title">👤 ข้อมูลของฉัน</h1>
-        <p className="page-header__sub">แก้ไขข้อมูลส่วนตัวของบัญชีผู้ใช้</p>
+        <h1 className="page-header__title">👤 My Profile</h1>
+        <p className="page-header__sub">Edit your account information</p>
       </div>
 
       <form onSubmit={handleSubmit} style={{ background: 'white', borderRadius: 20, border: '1px solid var(--gray-100)', padding: 28, boxShadow: '0 2px 12px rgba(249,168,201,0.08)' }}>
 
-        {/* Email (read-only) */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-500)', display: 'block', marginBottom: 6 }}>อีเมล (ไม่สามารถเปลี่ยนได้)</label>
+          <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-500)', display: 'block', marginBottom: 6 }}>Email (cannot be changed)</label>
           <input className="payment-input" value={user?.email || ''} disabled
             style={{ background: 'var(--gray-50)', color: 'var(--gray-400)', cursor: 'not-allowed' }} />
         </div>
 
-        {/* Username */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 6 }}>ชื่อผู้ใช้ <span style={{ color: 'var(--pink)' }}>*</span></label>
+          <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 6 }}>Username <span style={{ color: 'var(--pink)' }}>*</span></label>
           <input className="payment-input" value={form.username}
             onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
-            placeholder="ชื่อที่แสดงในระบบ" required />
+            placeholder="Display name" required />
         </div>
 
-        {/* Phone */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 6 }}>เบอร์โทรศัพท์</label>
+          <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 6 }}>Phone Number</label>
           <input className="payment-input" value={form.phone}
             onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
             placeholder="0xx-xxx-xxxx" />
         </div>
 
-        {/* Address */}
         <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 6 }}>ที่อยู่</label>
+          <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 6 }}>Address</label>
           <textarea className="payment-input" value={form.address}
             onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
-            placeholder="ที่อยู่สำหรับติดต่อ" rows={3}
+            placeholder="Contact address" rows={3}
             style={{ resize: 'vertical' }} />
         </div>
 
@@ -97,7 +92,7 @@ const CustomerProfilePage = () => {
         )}
 
         <button type="submit" className="payment-submit-btn" disabled={saving}>
-          {saving ? '⏳ กำลังบันทึก...' : '💾 บันทึกข้อมูล'}
+          {saving ? '⏳ Saving...' : '💾 Save Profile'}
         </button>
       </form>
     </div>

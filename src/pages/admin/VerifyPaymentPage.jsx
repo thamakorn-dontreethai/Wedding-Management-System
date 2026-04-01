@@ -23,14 +23,14 @@ const VerifyPaymentPage = () => {
         p._id === paymentId ? { ...p, status: 'approved' } : p
       ));
     } catch (err) {
-      alert(err.response?.data?.message || 'เกิดข้อผิดพลาด');
+      alert(err.response?.data?.message || 'An error occurred');
     } finally {
       setProcessing(null);
     }
   };
 
   const handleReject = async (paymentId) => {
-    const reason = prompt('กรุณาระบุเหตุผลที่ปฏิเสธ:');
+    const reason = prompt('Please provide a reason for rejection:');
     if (!reason) return;
     setProcessing(paymentId);
     try {
@@ -39,7 +39,7 @@ const VerifyPaymentPage = () => {
         p._id === paymentId ? { ...p, status: 'rejected' } : p
       ));
     } catch (err) {
-      alert(err.response?.data?.message || 'เกิดข้อผิดพลาด');
+      alert(err.response?.data?.message || 'An error occurred');
     } finally {
       setProcessing(null);
     }
@@ -51,16 +51,15 @@ const VerifyPaymentPage = () => {
   return (
     <div>
       <div className="page-header">
-        <h1 className="page-header__title">✅ ตรวจสอบหลักฐานการชำระเงิน</h1>
-        <p className="page-header__sub">อนุมัติหรือปฏิเสธการชำระเงินมัดจำของลูกค้า</p>
+        <h1 className="page-header__title">✅ Verify Payment Slips</h1>
+        <p className="page-header__sub">Approve or reject customer deposit payments</p>
       </div>
 
-      {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 24 }}>
         {[
-          { label: 'ทั้งหมด', value: payments.length, color: 'var(--gray-700)', bg: 'var(--gray-50)' },
-          { label: 'รอตรวจ', value: pendingCount, color: '#d97706', bg: '#fffbeb' },
-          { label: 'อนุมัติแล้ว', value: approvedCount, color: '#16a34a', bg: '#f0fdf4' },
+          { label: 'Total', value: payments.length, color: 'var(--gray-700)', bg: 'var(--gray-50)' },
+          { label: 'Pending', value: pendingCount, color: '#d97706', bg: '#fffbeb' },
+          { label: 'Approved', value: approvedCount, color: '#16a34a', bg: '#f0fdf4' },
         ].map((s, i) => (
           <div key={i} style={{
             padding: '16px 20px', borderRadius: 14,
@@ -77,7 +76,7 @@ const VerifyPaymentPage = () => {
       ) : payments.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state__icon">💳</div>
-          <p className="empty-state__title">ยังไม่มีการชำระเงิน</p>
+          <p className="empty-state__title">No payments yet</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -86,13 +85,13 @@ const VerifyPaymentPage = () => {
               <div className="verify-card__header">
                 <div>
                   <div className="verify-card__title">
-                    {p.customerId?.username || p.customerId?.firstName || 'ลูกค้า'}
+                    {p.customerId?.username || p.customerId?.firstName || 'Customer'}
                     <span style={{ fontSize: 12, color: 'var(--gray-400)', marginLeft: 8 }}>
-                      งวด {p.installment}
+                      Installment {p.installment}
                     </span>
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--gray-400)', marginTop: 2 }}>
-                    {new Date(p.createdAt).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    {new Date(p.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                   </div>
                 </div>
                 <div style={{
@@ -100,42 +99,39 @@ const VerifyPaymentPage = () => {
                   background: p.status === 'approved' ? '#f0fdf4' : p.status === 'rejected' ? '#fff5f5' : '#fffbeb',
                   color: p.status === 'approved' ? '#16a34a' : p.status === 'rejected' ? '#dc2626' : '#d97706',
                 }}>
-                  {p.status === 'approved' ? '✅ อนุมัติแล้ว' : p.status === 'rejected' ? '❌ ปฏิเสธ' : '⏳ รอตรวจสอบ'}
+                  {p.status === 'approved' ? '✅ Approved' : p.status === 'rejected' ? '❌ Rejected' : '⏳ Pending'}
                 </div>
               </div>
 
               <div className="verify-card__body">
-                {/* Slip */}
                 <div className="verify-card__slip">
                   {p.slipUrl ? (
-                    <img src={p.slipUrl} alt="สลิป" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={p.slipUrl} alt="slip" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : '🧾'}
                 </div>
 
-                {/* Info */}
                 <div className="verify-card__info">
                   <div className="verify-card__row">
-                    <span>ยอดชำระ</span>
+                    <span>Amount</span>
                     <span style={{ color: 'var(--pink)', fontWeight: 800, fontSize: 16 }}>
                       ฿{p.amount?.toLocaleString()}
                     </span>
                   </div>
                   <div className="verify-card__row">
-                    <span>วันที่โอน</span>
-                    <span>{p.transferDate ? new Date(p.transferDate).toLocaleDateString('th-TH') : '-'}</span>
+                    <span>Transfer Date</span>
+                    <span>{p.transferDate ? new Date(p.transferDate).toLocaleDateString('en-US') : '-'}</span>
                   </div>
                   <div className="verify-card__row">
-                    <span>ธนาคาร</span>
+                    <span>Bank</span>
                     <span>{p.bankName || '-'}</span>
                   </div>
                   <div className="verify-card__row">
-                    <span>การจอง</span>
+                    <span>Booking</span>
                     <span style={{ fontSize: 12 }}>{p.bookingId?.venueId?.name || p.bookingId?.venueName || '-'}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Actions */}
               {p.status === 'pending' && (
                 <div className="verify-card__actions">
                   {p.slipUrl && (
@@ -144,7 +140,7 @@ const VerifyPaymentPage = () => {
                         padding: '8px 16px', borderRadius: 10, border: '2px solid var(--pink-border)',
                         background: 'white', color: 'var(--pink)', fontWeight: 600, cursor: 'pointer', fontSize: 13,
                       }}>
-                      🔍 ดูสลิป
+                      🔍 View Slip
                     </button>
                   )}
                   <button onClick={() => handleReject(p._id)} disabled={processing === p._id}
@@ -152,7 +148,7 @@ const VerifyPaymentPage = () => {
                       padding: '8px 16px', borderRadius: 10, border: '2px solid #fca5a5',
                       background: '#fff5f5', color: '#dc2626', fontWeight: 600, cursor: 'pointer', fontSize: 13,
                     }}>
-                    ❌ ปฏิเสธ
+                    ❌ Reject
                   </button>
                   <button onClick={() => handleApprove(p._id)} disabled={processing === p._id}
                     style={{
@@ -160,7 +156,7 @@ const VerifyPaymentPage = () => {
                       background: 'linear-gradient(135deg, #86efac, #16a34a)',
                       color: 'white', fontWeight: 700, cursor: 'pointer', fontSize: 13,
                     }}>
-                    {processing === p._id ? '⏳...' : '✅ อนุมัติ'}
+                    {processing === p._id ? '⏳...' : '✅ Approve'}
                   </button>
                 </div>
               )}
@@ -169,11 +165,9 @@ const VerifyPaymentPage = () => {
         </div>
       )}
 
-      {/* Slip Modal */}
-      <Modal isOpen={!!selectedSlip} onClose={() => setSelectedSlip(null)}
-        title="หลักฐานการชำระเงิน">
+      <Modal isOpen={!!selectedSlip} onClose={() => setSelectedSlip(null)} title="Payment Slip">
         {selectedSlip?.slipUrl && (
-          <img src={selectedSlip.slipUrl} alt="สลิป"
+          <img src={selectedSlip.slipUrl} alt="slip"
             style={{ width: '100%', borderRadius: 12, maxHeight: 500, objectFit: 'contain' }} />
         )}
       </Modal>

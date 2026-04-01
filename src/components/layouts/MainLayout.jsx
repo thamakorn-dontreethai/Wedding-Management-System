@@ -6,7 +6,7 @@ import '../../index.css';
 const MainLayout = () => {
   const user = useAuthStore((state) => state.user);
 
-  const displayName = user?.username || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'ผู้ใช้งาน';
+  const displayName = user?.username || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'User';
   const displayRole = user?.role || 'guest';
   const avatarText = displayName.trim().charAt(0).toUpperCase() || 'U';
 

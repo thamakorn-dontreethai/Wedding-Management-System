@@ -4,14 +4,14 @@ import api from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 
 const SERVICE_TYPE_OPTIONS = [
-    { value: 'food', label: '🍽️ อาหาร' },
-    { value: 'photo', label: '📷 ช่างภาพ' },
-    { value: 'music', label: '🎵 วงดนตรี' },
+    { value: 'food', label: '🍽️ Catering' },
+    { value: 'photo', label: '📷 Photographer' },
+    { value: 'music', label: '🎵 Music Band' },
 ];
 
 const RegisterPage = () => {
     const navigate = useNavigate();
-    const { setAuth } = useAuthStore(); // ✅ ย้ายมาอยู่ในนี้
+    const { setAuth } = useAuthStore();
     const [role, setRole] = useState('customer');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -24,14 +24,14 @@ const RegisterPage = () => {
         const rawMessage = err.response?.data?.message || '';
 
         if (rawMessage.includes('E11000') || rawMessage.includes('duplicate key')) {
-            return 'อีเมลนี้ถูกใช้งานแล้ว';
+            return 'This email is already in use';
         }
 
         if (rawMessage.includes('ValidationError')) {
-            return 'ข้อมูลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง';
+            return 'Invalid data. Please check your information.';
         }
 
-        return rawMessage || 'สมัครสมาชิกไม่สำเร็จ';
+        return rawMessage || 'Registration failed';
     };
 
     const handleChange = (e) => {
@@ -49,7 +49,7 @@ const RegisterPage = () => {
         setError('');
 
         if (role === 'provider' && !formData.serviceType) {
-            setError('กรุณาเลือกประเภทผู้ให้บริการ (อาหาร / ช่างภาพ / วงดนตรี)');
+            setError('Please select a service type (Catering / Photographer / Music Band)');
             return;
         }
 
@@ -87,18 +87,17 @@ const RegisterPage = () => {
 
                 <div className="auth-header">
                     <div className="auth-icon">🌸</div>
-                    <h1>สร้างบัญชีใหม่</h1>
-                    <p>เลือกประเภทผู้ใช้งานเพื่อเริ่มต้น</p>
+                    <h1>Create Account</h1>
+                    <p>Select your account type to get started</p>
                 </div>
 
                 <div className="auth-body">
                     <form onSubmit={handleSubmit}>
 
-                        {/* Role */}
                         <div className="role-selector" style={{ gridTemplateColumns: '1fr 1fr', marginBottom: '20px' }}>
                             {[
-                                { value: 'customer', label: '👫 ลูกค้า (คู่บ่าวสาว)' },
-                                { value: 'provider', label: '🎵 ผู้ให้บริการ' },
+                                { value: 'customer', label: '👫 Customer (Couple)' },
+                                { value: 'provider', label: '🎵 Service Provider' },
                             ].map((r) => (
                                 <button key={r.value} type="button"
                                     className={`role-btn ${role === r.value ? 'active' : ''}`}
@@ -108,28 +107,27 @@ const RegisterPage = () => {
                             ))}
                         </div>
 
-                        {/* Name row */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                             <div className="input-group">
-                                <label className="input-label">ชื่อ</label>
+                                <label className="input-label">First Name</label>
                                 <div className="input-wrapper">
                                     <span className="input-icon">👤</span>
-                                    <input className="auth-input" name="firstName" placeholder="ชื่อ"
+                                    <input className="auth-input" name="firstName" placeholder="First name"
                                         value={formData.firstName} onChange={handleChange} required />
                                 </div>
                             </div>
                             <div className="input-group">
-                                <label className="input-label">นามสกุล</label>
+                                <label className="input-label">Last Name</label>
                                 <div className="input-wrapper">
                                     <span className="input-icon">👤</span>
-                                    <input className="auth-input" name="lastName" placeholder="นามสกุล"
+                                    <input className="auth-input" name="lastName" placeholder="Last name"
                                         value={formData.lastName} onChange={handleChange} required />
                                 </div>
                             </div>
                         </div>
 
                         <div className="input-group">
-                            <label className="input-label">เบอร์โทร</label>
+                            <label className="input-label">Phone Number</label>
                             <div className="input-wrapper">
                                 <span className="input-icon">📱</span>
                                 <input className="auth-input" name="phone" placeholder="0812345678"
@@ -138,7 +136,7 @@ const RegisterPage = () => {
                         </div>
 
                         <div className="input-group">
-                            <label className="input-label">อีเมล</label>
+                            <label className="input-label">Email</label>
                             <div className="input-wrapper">
                                 <span className="input-icon">✉️</span>
                                 <input className="auth-input" type="email" name="email" placeholder="example@ku.th"
@@ -147,7 +145,7 @@ const RegisterPage = () => {
                         </div>
 
                         <div className="input-group">
-                            <label className="input-label">รหัสผ่าน</label>
+                            <label className="input-label">Password</label>
                             <div className="input-wrapper">
                                 <span className="input-icon">🔒</span>
                                 <input className="auth-input" type="password" name="password" placeholder="••••••••"
@@ -155,33 +153,19 @@ const RegisterPage = () => {
                             </div>
                         </div>
 
-                        {/* Service type (provider only) */}
                         {role === 'provider' && (
                             <div className="input-group">
-                                <label className="input-label">ประเภทบริการ</label>
+                                <label className="input-label">Service Type</label>
                                 <p style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 8 }}>
-                                    กรุณาเลือกประเภทบัญชีก่อนสมัคร
+                                    Please select your service type before registering
                                 </p>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
                                     {SERVICE_TYPE_OPTIONS.map((service) => {
                                         const selected = formData.serviceType === service.value;
                                         return (
-                                            <button
-                                                key={service.value}
-                                                type="button"
+                                            <button key={service.value} type="button"
                                                 onClick={() => setFormData(prev => ({ ...prev, serviceType: service.value }))}
-                                                style={{
-                                                    border: `2px solid ${selected ? 'var(--pink)' : 'var(--gray-100)'}`,
-                                                    background: selected ? 'var(--pink-bg)' : 'white',
-                                                    color: selected ? 'var(--pink)' : 'var(--gray-600)',
-                                                    borderRadius: 12,
-                                                    padding: '10px 8px',
-                                                    fontSize: 13,
-                                                    fontWeight: 700,
-                                                    cursor: 'pointer',
-                                                    transition: 'all 0.2s ease',
-                                                }}
-                                            >
+                                                style={{ border: `2px solid ${selected ? 'var(--pink)' : 'var(--gray-100)'}`, background: selected ? 'var(--pink-bg)' : 'white', color: selected ? 'var(--pink)' : 'var(--gray-600)', borderRadius: 12, padding: '10px 8px', fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s ease' }}>
                                                 {service.label}
                                             </button>
                                         );
@@ -192,17 +176,14 @@ const RegisterPage = () => {
 
                         {error && <div className="auth-error">⚠️ {error}</div>}
 
-                        <button
-                            className="auth-btn auth-btn-primary"
-                            type="submit"
-                            disabled={loading || (role === 'provider' && !formData.serviceType)}
-                        >
-                            {loading ? 'กำลังสมัคร...' : 'ยืนยันการสมัคร'}
+                        <button className="auth-btn auth-btn-primary" type="submit"
+                            disabled={loading || (role === 'provider' && !formData.serviceType)}>
+                            {loading ? 'Registering...' : 'Create Account'}
                         </button>
 
                     </form>
 
-                    <Link to="/login" className="auth-link">← ย้อนกลับไปหน้า Login</Link>
+                    <Link to="/login" className="auth-link">← Back to Login</Link>
                 </div>
             </div>
         </div>

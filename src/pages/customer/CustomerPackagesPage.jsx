@@ -8,14 +8,14 @@ const getIncludedServices = (pkg) => {
   const services = [];
   if (pkg?.includeFood) {
     const foodLabel = pkg?.includeFoodType === 'chinese'
-      ? 'อาหาร (โต๊ะจีน)'
+      ? 'Catering (Chinese Banquet)'
       : pkg?.includeFoodType === 'buffet'
-        ? 'อาหาร (บุฟเฟต์)'
-        : 'อาหาร (โต๊ะจีน/บุฟเฟต์)';
+        ? 'Catering (Buffet)'
+        : 'Catering (Chinese / Buffet)';
     services.push(foodLabel);
   }
-  if (pkg?.includePhoto) services.push('ช่างภาพ');
-  if (pkg?.includeMusic) services.push('วงดนตรี');
+  if (pkg?.includePhoto) services.push('Photographer');
+  if (pkg?.includeMusic) services.push('Music Band');
   return services;
 };
 
@@ -57,40 +57,19 @@ const CustomerPackagesPage = () => {
   return (
     <div style={{ maxWidth: 980, margin: '0 auto' }}>
       <div className="page-header">
-        <h1 className="page-header__title">📦 แพ็กเกจงานแต่ง</h1>
-        <p className="page-header__sub">เลือกแพ็กเกจจากแอดมินก่อน แล้วค่อยไปค้นหาสถานที่และจอง</p>
+        <h1 className="page-header__title">📦 Wedding Packages</h1>
+        <p className="page-header__sub">Choose a package first, then search for a venue and book</p>
       </div>
 
       {selectedPackage ? (
-        <div style={{
-          background: '#fff7fb',
-          border: '1px solid #fbcfe8',
-          borderRadius: 14,
-          padding: 14,
-          marginBottom: 20,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 12,
-        }}>
+        <div style={{ background: '#fff7fb', border: '1px solid #fbcfe8', borderRadius: 14, padding: 14, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
           <div>
-            <div style={{ fontSize: 12, color: '#9d174d', fontWeight: 700 }}>แพ็กเกจที่เลือกไว้</div>
+            <div style={{ fontSize: 12, color: '#9d174d', fontWeight: 700 }}>Selected Package</div>
             <div style={{ fontSize: 15, color: '#be185d', fontWeight: 800 }}>{selectedPackage.name}</div>
           </div>
-          <button
-            type="button"
-            onClick={handleClear}
-            style={{
-              border: '1px solid #f9a8d4',
-              color: '#be185d',
-              background: 'white',
-              borderRadius: 10,
-              padding: '8px 12px',
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}
-          >
-            ยกเลิกแพ็กเกจ
+          <button type="button" onClick={handleClear}
+            style={{ border: '1px solid #f9a8d4', color: '#be185d', background: 'white', borderRadius: 10, padding: '8px 12px', fontWeight: 700, cursor: 'pointer' }}>
+            Remove Package
           </button>
         </div>
       ) : null}
@@ -100,24 +79,15 @@ const CustomerPackagesPage = () => {
       ) : packages.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state__icon">📦</div>
-          <p className="empty-state__title">ยังไม่มีแพ็กเกจในระบบ</p>
-          <p className="empty-state__desc">รอแอดมินเพิ่มแพ็กเกจ แล้วกลับมาเลือกใหม่</p>
+          <p className="empty-state__title">No packages available</p>
+          <p className="empty-state__desc">Check back later when the admin adds packages</p>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
           {packages.map((pkg) => {
             const isSelected = selectedPackageId === pkg._id;
             return (
-              <div
-                key={pkg._id}
-                style={{
-                  border: `2px solid ${isSelected ? 'var(--pink)' : 'var(--gray-100)'}`,
-                  background: isSelected ? 'var(--pink-bg)' : 'white',
-                  borderRadius: 16,
-                  padding: 18,
-                  boxShadow: isSelected ? '0 8px 20px rgba(236,72,153,0.14)' : 'none',
-                }}
-              >
+              <div key={pkg._id} style={{ border: `2px solid ${isSelected ? 'var(--pink)' : 'var(--gray-100)'}`, background: isSelected ? 'var(--pink-bg)' : 'white', borderRadius: 16, padding: 18, boxShadow: isSelected ? '0 8px 20px rgba(236,72,153,0.14)' : 'none' }}>
                 <div style={{ fontSize: 17, fontWeight: 800, color: isSelected ? 'var(--pink)' : 'var(--gray-900)' }}>
                   {pkg.name}
                 </div>
@@ -125,30 +95,17 @@ const CustomerPackagesPage = () => {
                   <div style={{ marginTop: 6, fontSize: 13, color: 'var(--gray-500)' }}>{pkg.description}</div>
                 )}
                 <div style={{ marginTop: 8, fontSize: 12, color: 'var(--gray-600)', fontWeight: 600 }}>
-                  รวมบริการ: {getIncludedServices(pkg).length > 0 ? getIncludedServices(pkg).join(', ') : 'ไม่ระบุ'}
+                  Includes: {getIncludedServices(pkg).length > 0 ? getIncludedServices(pkg).join(', ') : 'Not specified'}
                 </div>
                 <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                   <span style={{ color: 'var(--gray-500)' }}>
-                    {pkg.maxGuests > 0 ? `รองรับ ${pkg.maxGuests} คน` : 'ไม่จำกัดจำนวนแขก'}
+                    {pkg.maxGuests > 0 ? `Up to ${pkg.maxGuests} guests` : 'Unlimited guests'}
                   </span>
                   <span style={{ color: 'var(--pink)', fontWeight: 800 }}>฿{(pkg.basePrice || 0).toLocaleString()}</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleSelectPackage(pkg)}
-                  style={{
-                    width: '100%',
-                    marginTop: 14,
-                    border: 'none',
-                    borderRadius: 10,
-                    padding: '10px 12px',
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                    color: 'white',
-                    background: isSelected ? '#db2777' : 'linear-gradient(135deg, #f9a8c9, #ec4899)',
-                  }}
-                >
-                  {isSelected ? 'เลือกแล้ว' : 'เลือกแพ็กเกจนี้'}
+                <button type="button" onClick={() => handleSelectPackage(pkg)}
+                  style={{ width: '100%', marginTop: 14, border: 'none', borderRadius: 10, padding: '10px 12px', fontWeight: 800, cursor: 'pointer', color: 'white', background: isSelected ? '#db2777' : 'linear-gradient(135deg, #f9a8c9, #ec4899)' }}>
+                  {isSelected ? 'Selected ✓' : 'Select Package'}
                 </button>
               </div>
             );
@@ -157,20 +114,9 @@ const CustomerPackagesPage = () => {
       )}
 
       <div style={{ marginTop: 24 }}>
-        <button
-          type="button"
-          onClick={() => navigate('/search')}
-          style={{
-            border: 'none',
-            borderRadius: 12,
-            padding: '12px 18px',
-            fontWeight: 800,
-            cursor: 'pointer',
-            color: 'white',
-            background: 'linear-gradient(135deg, #f9a8c9, #ec4899)',
-          }}
-        >
-          🔍 ไปหน้าค้นหาสถานที่
+        <button type="button" onClick={() => navigate('/search')}
+          style={{ border: 'none', borderRadius: 12, padding: '12px 18px', fontWeight: 800, cursor: 'pointer', color: 'white', background: 'linear-gradient(135deg, #f9a8c9, #ec4899)' }}>
+          🔍 Search Venues
         </button>
       </div>
     </div>
